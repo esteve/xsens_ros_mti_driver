@@ -30,23 +30,54 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef XSPORTINFOLIST_H
-#define XSPORTINFOLIST_H
+#ifndef XSENS_MATH_THROW_H
+#define XSENS_MATH_THROW_H
 
-#include "xsportinfoarray.h"
+#include <xstypes/xstypesconfig.h>
 
-#define XsPortInfoList XsPortInfoArray
-
-#ifndef __cplusplus
-// obsolete:
-#define XSPORTINFOLIST_INITIALIZER		XSPORTINFOARRAY_INITIALIZER
-#define XsPortInfoList_assign(thisPtr, size, src)		XsArray_assign(thisPtr, sz, src)
-#define XsPortInfoList_construct(thisPtr, size, src)	XsPortInfoArray_construct(thisPtr, size, src)
-#define XsPortInfoList_destruct(thisPtr)				XsArray_destruct(thisPtr)
-#define XsPortInfoList_copy(thisPtr, copy)				XsArray_copy(copy, thisPtr)
-#define XsPortInfoList_append(thisPtr, other)			XsArray_append(thisPtr, other)
-#define XsPortInfoList_erase(thisPtr, index, count)		XsArray_erase(thisPtr, index, count)
-#define XsPortInfoList_swap(a, b)						XsArray_swap(a, b)
+#ifndef XSENS_NO_EXCEPTIONS
+	#include <xstypes/xsexception.h>
 #endif
+
+#ifdef XSENS_NO_EXCEPTIONS
+	// support for exceptions is disabled, just do whatever assert(0) does
+	#ifdef XSENS_DEBUG
+		#include <assert.h>
+		#define XM_THROW(a)			XSENS_FW_ASSERT_FUNC(a, __FILE__, (unsigned) __LINE__)
+		#define XM_THROW_DEFINED	1
+	#else
+		#define XM_THROW(a)			((void) 0)
+		#define XM_THROW_DEFINED	0
+	#endif
+#else
+	#define XM_THROW_DEFINED	1
+	#ifdef XSEXCEPTION_H
+		#ifdef _MSC_VER
+			#define XETHROW(a)	throw XsException(XRV_ERROR, XsString(__FUNCTION__ " ") << XsString(a))
+		#elif defined __GNUC__
+			#define XETHROW(a)	throw XsException(XRV_ERROR, XsString(__PRETTY_FUNCTION__) << " " << XsString(a))
+		#else
+			#define XETHROW(a)	throw XsException(XRV_ERROR, XsString(__func__) << " " << XsString(a))
+		#endif
+	#else
+		#define XETHROW(a)	throw (a)
+	#endif
+
+	#if defined(XSENS_DEBUG) && defined(_WIN32) // && !defined(_WIN64) unclear why this clause was added in xsens_math.h rev 871 by RZA
+		#define XM_THROW(a) do { xsens::DebugTools::mathThrowBreakFunc(); XETHROW(a); } while(0)
+	#else
+		#define XM_THROW(a) do { XETHROW(a); } while(0)
+	#endif
+#endif
+
+namespace xsens
+{
+	namespace DebugTools
+	{
+		void mathThrowBreakFunc();
+		void enableFloatingPointExceptions();
+		void disableFloatingPointExceptions();
+	} // namespace DebugTools
+} // namespace xsens
 
 #endif

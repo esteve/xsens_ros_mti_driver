@@ -73,6 +73,7 @@ public:
 protected:
 	void initFunction() override;
 	int32_t innerFunction() override;
+	void signalStopThread(void) override;
 
 private:
 	xsens::Mutex m_incomingMutex;

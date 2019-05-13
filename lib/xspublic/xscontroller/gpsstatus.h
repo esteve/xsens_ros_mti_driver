@@ -33,7 +33,7 @@
 #ifndef XSGPSSTATUS_H
 #define XSGPSSTATUS_H
 
-#include "xdaconfig.h"
+#include "xscontrollerconfig.h"
 #include <xstypes/pstdint.h>
 #include <xstypes/xsdeviceid.h>
 

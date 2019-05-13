@@ -388,6 +388,18 @@ void XsDataPacket_construct(XsDataPacket* thisPtr)
 	thisPtr->m_etos = 0;
 }
 
+/*! \brief Inits a data packet as a (referenced) copy of \a src
+*/
+void XsDataPacket_copyConstruct(XsDataPacket* thisPtr, XsDataPacket const* src)
+{
+	++src->d->m_refCount;
+	thisPtr->d = src->d;
+	thisPtr->m_deviceId = src->m_deviceId;
+	thisPtr->m_toa = src->m_toa;
+	thisPtr->m_packetId = src->m_packetId;
+	thisPtr->m_etos = src->m_etos;
+}
+
 /*! \brief Clears and frees data in an XsDataPacket
 */
 void XsDataPacket_destruct(XsDataPacket* thisPtr)
@@ -665,6 +677,16 @@ XsScrData* XsDataPacket_rawData(const XsDataPacket* thisPtr, XsScrData* returnVa
 	auto it = MAP.find(XDI_RawAccGyrMagTemp);
 	if (it != MAP.end())
 		*returnVal = it->second->toDerived<XsScrDataVariant>().m_data;
+	else
+	{
+		for (XsSize i = 0; i < 3; ++i)
+		{
+			returnVal->m_acc[i] = 0;
+			returnVal->m_gyr[i] = 0;
+			returnVal->m_mag[i] = 0;
+		}
+		returnVal->m_temp = 0;
+	}
 	return returnVal;	// not found
 }
 
@@ -1148,7 +1170,7 @@ XsPressure* XsDataPacket_pressure(const XsDataPacket* thisPtr, XsPressure* retur
 */
 void XsDataPacket_setPressure(XsDataPacket* thisPtr, const XsPressure* data)
 {
-	GenericSimple<uint32_t>::set(thisPtr, XsMath::doubleToLong(data->m_pressure), XDI_BaroPressure);
+	GenericSimple<uint32_t>::set(thisPtr, (uint32_t) XsMath::doubleToLong(data->m_pressure), XDI_BaroPressure);
 	GenericSimple<uint8_t>::set(thisPtr, data->m_pressureAge, XDI_PressureAge);
 }
 
@@ -2058,7 +2080,8 @@ XsDataPacket* XsDataPacket_merge(XsDataPacket* thisPtr, const XsDataPacket* othe
 		if (genericContains(thisPtr, id1) &&
 			genericContains(thisPtr, id2))
 		{
-			if (genericContains(other, id1) ^ over)
+			bool gc = genericContains(other, id1);
+			if ((gc && !over) || (!gc && over))	// logical xor does not exist in C++, write it explicitly
 				MAP.erase(id1);
 			else
 				MAP.erase(id2);
@@ -2091,8 +2114,8 @@ void XsDataPacket_setMessage(XsDataPacket* thisPtr, const XsMessage* msg)
 {
 	XsDataPacket_clear(thisPtr, XDI_None);
 
-	int offset = 0;
-	int sz = (int) msg->getDataSize();
+	XsSize offset = 0;
+	XsSize sz = msg->getDataSize();
 
 	while (offset+4 <= sz)	// minimum size of an item is 2(ID) + 1(size) + 1(minimum size)
 	{
@@ -2128,13 +2151,13 @@ void XsDataPacket_toMessage(const XsDataPacket* thisPtr, XsMessage* msg)
 	msg->resizeData(0);	// clear the data part while leaving header intact
 	msg->setMessageId(XMID_MtData2);
 
-	int offset = 0;
+	XsSize offset = 0;
 	msg->resizeData(2048);	// prevent constant message resizing by pre-allocating a large message and later reducing its size
 	for (auto const& i : MAP)
 	{
 		msg->setDataShort((uint16_t) i.second->dataId(), offset);
-		int sz = i.second->sizeInMsg();
-		msg->setDataByte((uint8_t)(int8_t)sz, offset+2);
+		XsSize sz = i.second->sizeInMsg();
+		msg->setDataByte((uint8_t)sz, offset+2);
 		i.second->writeToMessage(*msg, offset+3);
 		offset += 3+sz;
 	}
@@ -2217,7 +2240,7 @@ static void convertRawVector(XsUShortVector const& input, XsDataIdentifier id, X
 	returnVal.setSize(3);
 	if ((id & XDI_DataFormatMask) == XDI_RawSigned)
 		caster = signed_cast;
-	for (int i = 0; i < 3; i++)
+	for (XsSize i = 0; i < 3; i++)
 		returnVal[i] = caster(input[i]);
 }
 

@@ -175,8 +175,9 @@ int XsMath_isFinite(XsReal x)
 	case _FPCLASS_PD:
 	case _FPCLASS_PN:
 		return 1;
+	default:
+		return _finite(x);
 	}
-	return _finite(x);
 #elif __GNUC__
 	return isfinite(x);
 #elif defined(isfinite)
@@ -186,6 +187,26 @@ int XsMath_isFinite(XsReal x)
 #else
 	return 1;
 #endif
+}
+
+/*! \brief Returns \a d integer converted from a single precision floating point value
+*/
+int32_t XsMath_floatToLong(float d)
+{
+	if (d >= 0)
+		return (int32_t) floorf(d+0.5f);
+	else
+		return (int32_t) ceilf(d-0.5f);
+}
+
+/*! \brief Returns \a d integer converted from a single precision floating point value
+*/
+int64_t XsMath_floatToInt64(float d)
+{
+	if (d >= 0)
+		return (int64_t) floorf(d+0.5f);
+	else
+		return (int64_t) ceilf(d-0.5f);
 }
 
 /*! \brief Returns \a d integer converted from a double precision floating point value

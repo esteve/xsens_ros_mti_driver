@@ -41,14 +41,16 @@
 	#define JLL_ALERT	ANDROID_LOG_WARN
 	#define JLL_ERROR	ANDROID_LOG_ERROR
 	#define JLL_FATAL	ANDROID_LOG_FATAL
-	#define JLL_NONE	ANDROID_LOG_SILENT
+	#define JLL_WRITE	ANDROID_LOG_SILENT
+	#define JLL_DISABLE	(JLL_WRITE+1)
 #else
 	#define JLL_TRACE	0
 	#define JLL_DEBUG	1
 	#define JLL_ALERT	2
 	#define JLL_ERROR	3
 	#define JLL_FATAL	4
-	#define JLL_NONE	5
+	#define JLL_WRITE	5
+	#define JLL_DISABLE	6
 #endif
 
 enum JournalLogLevel {
@@ -57,8 +59,16 @@ enum JournalLogLevel {
 	, JLL_Alert = JLL_ALERT		//!< only log fatal, error and alert messages
 	, JLL_Error = JLL_ERROR		//!< only log fatal and error messages
 	, JLL_Fatal = JLL_FATAL		//!< only log fatal messages
-	, JLL_None  = JLL_NONE		//!< don't log any messages
+	, JLL_Write = JLL_WRITE		//!< only log 'write' messages
+	, JLL_Diable= JLL_DISABLE	//!< don't log any messages
 };
+
+#ifdef NO_JOURNALLER
+	#ifdef JLDEF_BUILD
+		#undef JLDEF_BUILD
+	#endif
+	#define JLDEF_BUILD		JLL_DISABLE
+#endif
 
 #ifdef XSENS_DEBUG
 	#ifndef XSENS_RELEASE

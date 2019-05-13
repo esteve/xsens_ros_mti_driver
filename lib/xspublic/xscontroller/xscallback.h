@@ -69,6 +69,7 @@ public:
 		m_onInfoResponse = sonInfoResponse;
 		m_onError = sonError;
 		m_onNonDataMessage = sonNonDataMessage;
+		m_onMessageDetected = sonMessageDetected;
 		m_onMessageReceivedFromDevice = sonMessageReceivedFromDevice;
 		m_onMessageSentToDevice = sonMessageSentToDevice;
 		m_onAllLiveDataAvailable = sonAllLiveDataAvailable;
@@ -126,6 +127,9 @@ protected:
 	//! \copydoc m_onNonDataMessage
 	virtual void onNonDataMessage(XsDevice* dev, XsMessage const * message)
 	{ (void) dev; (void) message; m_onNonDataMessage = 0; }
+	//! \copydoc m_onMessageDetected
+	virtual void onMessageDetected(XsDevice* dev, XsProtocolType type, XsByteArray const * rawMessage)
+	{ (void)dev; (void)type;  (void)rawMessage; m_onMessageDetected = 0; }
 	//! \copydoc m_onMessageReceivedFromDevice
 	virtual void onMessageReceivedFromDevice(XsDevice* dev, XsMessage const * message)
 	{ (void) dev; (void) message; m_onMessageReceivedFromDevice = 0; }
@@ -175,6 +179,7 @@ private:
 	static void sonInfoResponse(XsCallbackPlainC* cb, XsDevice* dev, XsInfoRequest request) { ((XsCallback*)cb)->onInfoResponse(dev, request); }
 	static void sonError(XsCallbackPlainC* cb, XsDevice* dev, XsResultValue error) { ((XsCallback*)cb)->onError(dev, error); }
 	static void sonNonDataMessage(XsCallbackPlainC* cb, XsDevice* dev, XsMessage const * message) { ((XsCallback*)cb)->onNonDataMessage(dev, message); }
+	static void sonMessageDetected(XsCallbackPlainC* cb, XsDevice* dev, XsProtocolType type, XsByteArray const * rawMessage) { ((XsCallback*)cb)->onMessageDetected(dev, type, rawMessage); }
 	static void sonMessageReceivedFromDevice(XsCallbackPlainC* cb, XsDevice* dev, XsMessage const * message) { ((XsCallback*)cb)->onMessageReceivedFromDevice(dev, message); }
 	static void sonMessageSentToDevice(XsCallbackPlainC* cb, XsDevice* dev, XsMessage const * message) { ((XsCallback*)cb)->onMessageSentToDevice(dev, message); }
 	static void sonAllLiveDataAvailable(XsCallbackPlainC* cb, XsDevicePtrArray* devs, const XsDataPacketPtrArray* packets) { ((XsCallback*)cb)->onAllLiveDataAvailable(devs, packets); }

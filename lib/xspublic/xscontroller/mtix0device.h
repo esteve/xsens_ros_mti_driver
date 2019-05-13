@@ -55,9 +55,10 @@ public:
 	explicit MtiX0Device(MtContainer *master) : MtiBaseDeviceEx(master) {};
 	virtual ~MtiX0Device();
 
-protected:
-	virtual void fetchAvailableHardwareScenarios();
+	XsStringOutputTypeArray supportedStringOutputTypes() const override;
+	uint32_t supportedStatusFlags() const override;
 
+protected:
 	MtiBaseDevice::BaseFrequencyResult getBaseFrequencyInternal(XsDataIdentifier dataType = XDI_None) const override;
 };
 

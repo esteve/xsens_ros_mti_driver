@@ -35,7 +35,6 @@
 
 #include "mtibasedevice.h"
 
-class MtMk4_700HardwareParams;
 class MtContainer;
 
 /*! \brief The MTi device used for the 7-series
@@ -50,13 +49,14 @@ public:
 	}
 
 	//! \brief An empty constructor for a device
-	explicit Mti7Device(Communicator* comm, MtMk4_700HardwareParams* hwParams = 0);
+	explicit Mti7Device(Communicator* comm);
 
 	//! \brief An empty constructor for a master device
-	explicit Mti7Device(MtContainer *master, MtMk4_700HardwareParams* hwParams = 0);
+	explicit Mti7Device(MtContainer *master);
 	virtual ~Mti7Device();
 
-	bool hasIccSupport() const override { return true; }
+	bool hasIccSupport() const override;
+	uint32_t supportedStatusFlags() const override;
 
 protected:
 	BaseFrequencyResult getBaseFrequencyInternal(XsDataIdentifier dataType = XDI_None) const override;
@@ -72,10 +72,10 @@ private:
 struct Mti7DeviceEx : public Mti7Device
 {
 	//! \copybrief MtigDevice::MtigDevice
-	explicit Mti7DeviceEx(Communicator* comm, MtMk4_700HardwareParams* hwParams = 0) : Mti7Device(comm, hwParams) {};
+	explicit Mti7DeviceEx(Communicator* comm) : Mti7Device(comm) {};
 
 	//! \copybrief MtigDevice::MtigDevice
-	explicit Mti7DeviceEx(MtContainer *master, MtMk4_700HardwareParams* hwParams = 0) : Mti7Device(master, hwParams) {};
+	explicit Mti7DeviceEx(MtContainer *master) : Mti7Device(master) {};
 };
 #else
 #include "mti7deviceex.h"

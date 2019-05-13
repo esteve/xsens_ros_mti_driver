@@ -34,54 +34,28 @@
 #define NMEA_PROTOCOLHANDLER_H
 
 #include "iprotocolhandler.h"
-#include "nmea_iparserobserver.h"
+#include "xsprotocoltype.h"
 #include <xstypes/xsdatapacket.h>
-#include <xscommon/xsens_nonintrusive_shared_pointer.h>
+#include <xstypes/xsbytearray.h>
 
 namespace nmea
 {
 
-class IParser;
-
-
-class ProtocolHandler : public virtual IProtocolHandler, public virtual IParserObserver
+class ProtocolHandler : public virtual IProtocolHandler
 {
 public:
 	ProtocolHandler();
 	virtual ~ProtocolHandler() throw();
 
-	MessageLocation findMessage(XsMessage& rcv, const XsByteArray& raw) const override;
+	MessageLocation findMessage(XsProtocolType& type, const XsByteArray& raw) const override;
+	XsMessage convertToMessage(MessageLocation& location, const XsByteArray& raw) const override;
 	int minimumMessageSize() const override;
 	int maximumMessageSize() const override;
 	int type() const override;
 
-	virtual void onInitializeParse(char const * begin, char const * end);
-	virtual void onHCHDM(DoubleValue heading);
-	virtual void onHCHDG(DoubleValue heading,
-						 DoubleValue deviation, BoolValue positiveDeviation,
-						 DoubleValue variation, BoolValue positiveVariation);
-	virtual void onPHTRO(DoubleValue pitch, BoolValue bowUp,
-						 DoubleValue roll, BoolValue portUp);
-	virtual void onHCMTW(DoubleValue temperature);
-	virtual void onPRDID(DoubleValue pitch, DoubleValue roll, DoubleValue heading);
-	virtual void onPSONCMS(DoubleValue quat1, DoubleValue quat2, DoubleValue quat3, DoubleValue quat4,
-						   DoubleValue acc_x, DoubleValue acc_y, DoubleValue acc_z,
-						   DoubleValue omega_x, DoubleValue omega_y, DoubleValue omega_z,
-						   DoubleValue mag_x, DoubleValue mag_y, DoubleValue mag_z,
-						   DoubleValue temperature);
-	virtual void onTSS2(DoubleValue heading, DoubleValue heave, DoubleValue roll, DoubleValue pitch);
-	virtual void onEM1000(DoubleValue roll, DoubleValue pitch, DoubleValue heave, DoubleValue heading);
-	virtual void onHEHDT(DoubleValue heading);
-	virtual void onHEROT(DoubleValue rateOfTurn);
-
 private:
 	static const int MINIMUM_MESSAGE_SIZE = 16;
 	static const int MAXIMUM_MESSAGE_SIZE = 128;
-
-	inline XsReal calcEulerAngle(XsReal heading) const;
-
-	xsens::NonIntrusiveSharedPointer<IParser> m_parser;
-	XsDataPacket m_dataPacket;
 };
 
 }

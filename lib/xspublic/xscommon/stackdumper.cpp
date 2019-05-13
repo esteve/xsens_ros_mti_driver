@@ -44,26 +44,39 @@
 class DumpStackWalker : public StackWalker {
 public:
 	//! Constructor
-	DumpStackWalker() : StackWalker() {}
+	DumpStackWalker(bool includeModules)
+		: StackWalker()
+		, m_outputStarted(includeModules)
+	{
+	}
 
 	//! Storage for the stack dump while it's being created
 	std::string m_string;
+	bool m_outputStarted;
 
 	//! Overloaded function that deals with stqack dump information as it comes in
-	virtual void OnOutput(LPCSTR szText)
+	void OnOutput(LPCSTR szText) override
 	{
+#ifdef _MSC_VER
+		if (!m_outputStarted)
+		{
+			if (strstr(szText, "************* Callstack *************"))
+				m_outputStarted = true;
+		}
+		if (!m_outputStarted)
+			return;
+#endif
+		m_string.append("\n\t");
 		m_string.append(szText);
-		m_string.append("\n");
 	}
 };
 
 /*! \brief Returns the callstack and other debug information as a string.
 	\details The stackdump includes some of the stack dumping functions
 */
-std::string getStackDump()
+std::string getStackDump(bool includeModules)
 {
-	DumpStackWalker sw;
+	DumpStackWalker sw(includeModules);
 	sw.ShowCallstack();
 	return sw.m_string;
 }
-

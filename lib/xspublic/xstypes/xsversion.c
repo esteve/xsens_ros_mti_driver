@@ -52,14 +52,14 @@ int XsVersion_empty(const XsVersion* thisPtr)
 void XsVersion_toString(const XsVersion* thisPtr, XsString* version)
 {
 	char buffer[256];
-	size_t chars;
+	int chars;
 
 	if (thisPtr->m_build != 0 && thisPtr->m_reposVersion != 0)
 		chars = sprintf(buffer, "%d.%d.%d build %d rev %d", thisPtr->m_major, thisPtr->m_minor, thisPtr->m_revision, thisPtr->m_build, thisPtr->m_reposVersion);
 	else
 		chars = sprintf(buffer, "%d.%d.%d", thisPtr->m_major, thisPtr->m_minor, thisPtr->m_revision);
 
-	XsString_assign(version, (XsSize)chars, buffer);
+	XsString_assign(version, (XsSize)(ptrdiff_t)chars, buffer);
 	if (thisPtr->m_extra.m_size != 0)
 	{
 		const char space = ' ';
@@ -75,10 +75,8 @@ void XsVersion_toString(const XsVersion* thisPtr, XsString* version)
 void XsVersion_toSimpleString(const XsVersion* thisPtr, XsString* version)
 {
 	char buffer[256];
-	size_t chars;
-
-	chars = sprintf(buffer, "%d.%d.%d", thisPtr->m_major, thisPtr->m_minor, thisPtr->m_revision);
-	XsString_assign(version, (XsSize)chars, buffer);
+	int chars = sprintf(buffer, "%d.%d.%d", thisPtr->m_major, thisPtr->m_minor, thisPtr->m_revision);
+	XsString_assign(version, (XsSize)(ptrdiff_t)chars, buffer);
 }
 
 /*!
@@ -92,7 +90,7 @@ void XsVersion_fromString(XsVersion* thisPtr, const XsString* version)
 	int revision = 0;
 	int build = 0;
 	int reposVersion = 0;
-	int result = 0;
+	int result;
 	size_t count = 0;
 
 	assert(thisPtr);
@@ -142,9 +140,9 @@ void XsVersion_fromSimpleVersion(XsVersion* thisPtr, const XsSimpleVersion* simp
  */
 void XsVersion_toSimpleVersion(const XsVersion* thisPtr, XsSimpleVersion* simpleVersion)
 {
-	simpleVersion->m_major = thisPtr->m_major;
-	simpleVersion->m_minor = thisPtr->m_minor;
-	simpleVersion->m_revision = thisPtr->m_revision;
+	simpleVersion->m_major = (uint8_t)(int8_t)thisPtr->m_major;
+	simpleVersion->m_minor = (uint8_t)(int8_t)thisPtr->m_minor;
+	simpleVersion->m_revision = (uint8_t)(int8_t)thisPtr->m_revision;
 }
 
 /*! @} */

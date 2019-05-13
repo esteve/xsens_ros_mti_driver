@@ -35,7 +35,6 @@
 
 #include "mtibasedevice.h"
 
-class MtMk4_700HardwareParams;
 class MtContainer;
 
 /*! \class MtigDevice
@@ -50,9 +49,12 @@ public:
 		return new MtigDevice(comm);
 	}
 
-	explicit MtigDevice(Communicator* comm, MtMk4_700HardwareParams* hwParams = 0);
-	explicit MtigDevice(MtContainer *master, MtMk4_700HardwareParams* hwParams = 0);
+	explicit MtigDevice(Communicator* comm);
+	explicit MtigDevice(MtContainer *master);
 	virtual ~MtigDevice();
+
+	XsStringOutputTypeArray supportedStringOutputTypes() const override;
+	uint32_t supportedStatusFlags() const override;
 
 protected:
 	MtiBaseDevice::BaseFrequencyResult getBaseFrequencyInternal(XsDataIdentifier dataType = XDI_None) const override;
@@ -68,10 +70,10 @@ private:
 struct MtigDeviceEx : public MtigDevice
 {
 	//! \copybrief MtigDevice::MtigDevice
-	explicit MtigDeviceEx(Communicator* comm, MtMk4_700HardwareParams* hwParams = 0) : MtigDevice(comm, hwParams) {};
+	explicit MtigDeviceEx(Communicator* comm) : MtigDevice(comm) {};
 
 	//! \copybrief MtigDevice::MtigDevice
-	explicit MtigDeviceEx(MtContainer *master, MtMk4_700HardwareParams* hwParams = 0) : MtigDevice(master, hwParams) {};
+	explicit MtigDeviceEx(MtContainer *master) : MtigDevice(master) {};
 };
 #else
 #include "mtigdeviceex.h"

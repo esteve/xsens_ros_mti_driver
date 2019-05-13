@@ -106,7 +106,7 @@ public:
 
 	/*! \brief Unload the loaded library
 	*/
-	inline void unload() throw()
+	inline void unload() noexcept
 	{
 		XsLibraryLoader_unload(this);
 	}
@@ -129,4 +129,4 @@ private:
 	void* m_handle;
 };
 
-#endif //XSLIBRARYLOADER_H
+#endif

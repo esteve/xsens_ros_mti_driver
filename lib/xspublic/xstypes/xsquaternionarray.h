@@ -72,7 +72,7 @@ struct XsQuaternionArray : public XsArrayImpl<XsQuaternion, g_xsQuaternionArrayD
 	}
 
 	//! \brief Constructs an XsQuaternionArray that references the data supplied in \a ref
-	inline explicit XsQuaternionArray(XsQuaternion* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsQuaternionArray(XsQuaternion* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: ArrayImpl(ref, sz, flags)
 	{
 	}

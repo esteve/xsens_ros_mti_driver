@@ -99,13 +99,13 @@ inline std::string dumpBuffer(const uint8_t* buff, XsSize sz)
 
 /*! \copydoc IProtocolHandler::findMessage
 */
-MessageLocation ProtocolHandler::findMessage(XsMessage& rcv, const XsByteArray& raw) const
+MessageLocation ProtocolHandler::findMessage(XsProtocolType& type, const XsByteArray& raw) const
 {
 	JLTRACEG("Entry");
-	MessageLocation rv(-1,0,-1,0);
-	rcv.clear();
+	type = static_cast<XsProtocolType>(ProtocolHandler::type());
+	MessageLocation rv(-1, 0, -1, 0);
 
-	int bufferSize = (int) raw.size();
+	int bufferSize = (int)raw.size();
 	if (bufferSize == 0)
 		return rv;
 
@@ -123,8 +123,8 @@ MessageLocation ProtocolHandler::findMessage(XsMessage& rcv, const XsByteArray& 
 			JLTRACEG("Preamble found at " << pre);
 			// we found a preamble, see if we can read a message from here
 			if (rv.m_startPos == -1)
-				rv.m_startPos = (int32_t) pre;
-			int remaining = bufferSize-pre;	// remaining bytes in buffer INCLUDING preamble
+				rv.m_startPos = (int32_t)pre;
+			int remaining = bufferSize - pre;	// remaining bytes in buffer INCLUDING preamble
 
 			if (remaining < XS_LEN_MSGHEADERCS)
 			{
@@ -138,7 +138,7 @@ MessageLocation ProtocolHandler::findMessage(XsMessage& rcv, const XsByteArray& 
 
 			// read header
 			const uint8_t* msgStart = &(buffer[pre]);
-			const XsMessageHeader* hdr = (const XsMessageHeader*) msgStart;
+			const XsMessageHeader* hdr = (const XsMessageHeader*)msgStart;
 			if (hdr->m_length == XS_EXTLENCODE)
 			{
 				if (remaining < XS_LEN_MSGEXTHEADERCS)
@@ -180,8 +180,8 @@ MessageLocation ProtocolHandler::findMessage(XsMessage& rcv, const XsByteArray& 
 				if (rv.m_size == 0)
 				{
 					/* only report an error if we didn't already find a valid header
-						in this case, we're probably parsing data within a message, so we don't want to
-						skip data unless we're sure we have a valid message
+					in this case, we're probably parsing data within a message, so we don't want to
+					skip data unless we're sure we have a valid message
 					*/
 					JLALERTG("Invalid message length: " << target);
 					//JLDEBUGG("Buffer: " << dumpBuffer(buffer, bufferSize));
@@ -200,7 +200,7 @@ MessageLocation ProtocolHandler::findMessage(XsMessage& rcv, const XsByteArray& 
 					rv.m_incompleteSize = target;
 				continue;
 			}
-
+			XsMessage rcv;
 			// we have read enough data to fulfill our target so we'll try to parse the message
 			// and check the checksum
 			//if (rcv->loadFromString(msgStart, (uint16_t) target) == XRV_OK)
@@ -227,8 +227,6 @@ MessageLocation ProtocolHandler::findMessage(XsMessage& rcv, const XsByteArray& 
 				return rv;
 			}
 
-			// we could not read the message, clear message and try next preamble
-			rcv.clear();
 			if (rv.m_startPos == pre)
 			{
 				rv.m_startPos = -1;
@@ -242,6 +240,30 @@ MessageLocation ProtocolHandler::findMessage(XsMessage& rcv, const XsByteArray& 
 	}
 	JLTRACEG("Exit");
 	return rv;
+}
+
+/*! \copydoc IProtocolHandler::convertToMessage
+*/
+XsMessage ProtocolHandler::convertToMessage(MessageLocation& location, const XsByteArray& raw) const
+{
+	XsMessage message;
+
+	const unsigned char* buffer = raw.data();
+	const uint8_t* msgStart = &(buffer[location.m_startPos]);
+
+	if (message.loadFromString(msgStart, (uint16_t)location.m_size))
+	{
+		JLTRACEG("OK, size = " << (int)message.getTotalMessageSize() << " buffer: " << dumpBuffer(msgStart, location.m_size));
+		location.m_size = (int)message.getTotalMessageSize();
+
+		return message;
+	}
+
+	message.clear();
+	location.m_startPos = -1;
+	location.m_incompletePos = -1;
+
+	return message;
 }
 
 /*! \brief Returns the minimum size of a valid message of this protocol including preambles and checksums */
@@ -272,7 +294,7 @@ int ProtocolHandler::composeMessage(XsByteArray& raw, const XsMessage& msg)
 
 int ProtocolHandler::type() const
 {
-	return 0; // XPT_Xbus;
+	return XPT_Xbus;
 }
 
 void ProtocolHandler::ignoreMaximumMessageSize(bool ignore)

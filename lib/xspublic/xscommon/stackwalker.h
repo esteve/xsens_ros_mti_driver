@@ -123,14 +123,9 @@ public:
 						LPVOID pUserData = NULL  // optional to identify some data in the 'readMemoryFunction'-callback
 						);
 
-#if _MSC_VER >= 1300
-// due to some reasons, the "STACKWALK_MAX_NAMELEN" must be declared as "public"
-// in older compilers in order to use it... starting with VC7 we can declare it as "protected"
 protected:
-#endif
 	enum { STACKWALK_MAX_NAMELEN = 1024 }; // max name length for found symbols
 
-protected:
 	/*! \brief Container for each Callstack-Entry */
 	struct CallstackEntry
 	{
@@ -168,6 +163,8 @@ protected:
 	static BOOL __stdcall myReadProcMem(HANDLE hProcess, DWORD64 qwBaseAddress, PVOID lpBuffer, DWORD nSize, LPDWORD lpNumberOfBytesRead);
 
 	friend StackWalkerInternal;
+	StackWalker(StackWalker const&) = delete;
+	StackWalker& operator = (StackWalker const&) = delete;
 };
 
 // The "ugly" assembler-implementation is needed for systems before XP

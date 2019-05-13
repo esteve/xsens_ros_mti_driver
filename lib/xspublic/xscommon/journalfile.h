@@ -36,6 +36,7 @@
 #include <string>
 #include <xstypes/xsstring.h>
 #include <xstypes/xsfile.h>
+#include <atomic>
 
 class JournalFile {
 public:
@@ -44,15 +45,17 @@ public:
 
 	void flush();
 
-	void addRef();
-	int refCount();
-	void removeRef();
+	int addRef();
+	int refCount() volatile const;
+	int removeRef();
 
-	XsString filename();
-	JournalFile& operator<<(std::string& msg);
+	XsString filename() const;
+	JournalFile& operator<<(std::string const& msg);
+	/*! \brief Return the internal XsFile object, only to be used directly when absolutely necessary */
+	XsFile& xsFile() { return m_file; }
 
 private:
-	int m_refCount;
+	volatile std::atomic_int m_refCount;
 	XsString m_filename;
 	XsFile m_file;
 };

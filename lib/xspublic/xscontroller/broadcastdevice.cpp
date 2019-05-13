@@ -411,9 +411,19 @@ bool BroadcastDevice::setXdaFilterProfile(int profileType)
 	return BroadcastForwardFunc1Arg<int>(this, &XsDevice::setXdaFilterProfile, profileType)();
 }
 
+bool BroadcastDevice::setXdaFilterProfile(XsString const& profileType)
+{
+	return BroadcastForwardFunc1Arg<XsString const&>(this, &XsDevice::setXdaFilterProfile, profileType)();
+}
+
 bool BroadcastDevice::setOnboardFilterProfile(int profileType)
 {
 	return BroadcastForwardFunc1Arg<int>(this, &XsDevice::setOnboardFilterProfile, profileType)();
+}
+
+bool BroadcastDevice::setOnboardFilterProfile(XsString const& profileType)
+{
+	return BroadcastForwardFunc1Arg<XsString const&>(this, &XsDevice::setOnboardFilterProfile, profileType)();
 }
 
 bool BroadcastDevice::setGravityMagnitude(double mag)

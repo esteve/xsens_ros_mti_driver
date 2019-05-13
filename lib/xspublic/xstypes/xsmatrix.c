@@ -281,17 +281,17 @@ void XsMatrix_fromQuaternion(XsMatrix* thisPtr, const XsQuaternion* quat)
 
 	XsMatrix_assign(thisPtr, 3, 3, 3, 0, 0);
 
-	XsMatrix_setValue(thisPtr, 0, 0, q00 + q11 - q22 - q33);
+	XsMatrix_setValue(thisPtr, 0, 0, (q00 + q11 - q22) - q33);
 	XsMatrix_setValue(thisPtr, 0, 1, (q12 - q03) * XsMath_two);
 	XsMatrix_setValue(thisPtr, 0, 2, (q13 + q02) * XsMath_two);
 
 	XsMatrix_setValue(thisPtr, 1, 0, (q12 + q03) * XsMath_two);
-	XsMatrix_setValue(thisPtr, 1, 1, q00 - q11 + q22 - q33);
+	XsMatrix_setValue(thisPtr, 1, 1, (q00 - q11) + (q22 - q33));
 	XsMatrix_setValue(thisPtr, 1, 2, (q23 - q01) * XsMath_two);
 
 	XsMatrix_setValue(thisPtr, 2, 0, (q13 - q02) * XsMath_two);
 	XsMatrix_setValue(thisPtr, 2, 1, (q23 + q01) * XsMath_two);
-	XsMatrix_setValue(thisPtr, 2, 2, q00 - q11 - q22 + q33);
+	XsMatrix_setValue(thisPtr, 2, 2, ((q00 - q11) - q22) + q33);
 }
 
 /*! \relates XsMatrix \brief Swap the contents of \a a and \a b

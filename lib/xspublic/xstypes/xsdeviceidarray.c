@@ -51,7 +51,13 @@ void initDeviceIdToValue(XsDeviceId* did, XsDeviceId const* src)
 
 int compareDeviceIds(XsDeviceId const* a, XsDeviceId const* b)
 {
-	return ((int) a->m_serialNumber) - ((int) b->m_serialNumber);
+	int64_t diff = (int64_t)a->m_deviceId - (int64_t)b->m_deviceId;
+	if (diff < 0)
+		return -1;
+	else if (diff > 0)
+		return 1;
+
+	return 0;
 }
 
 //! \brief Descriptor for XsDeviceIdArray

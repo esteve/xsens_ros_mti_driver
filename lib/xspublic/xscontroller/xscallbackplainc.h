@@ -38,6 +38,7 @@
 #include <xstypes/xsinforequest.h>
 #include "xsdevicestate.h"
 #include "xsconnectivitystate.h"
+#include "xsprotocoltype.h"
 
 #ifndef __cplusplus
 #define XSCALLBACK_INITIALIZER		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
@@ -149,6 +150,14 @@ typedef struct XsCallbackPlainC
 		\param message The message that has been received
 	*/
 	void (*m_onNonDataMessage)(struct XsCallbackPlainC* thisPtr, struct XsDevice* dev, struct XsMessage const * message);
+
+	/*! \brief Called just after a message is detected in raw data from the device.
+		\param dev The device that sent the message
+		\param type The protocol type that detected a message
+		\param rawMessage The raw message that has been detected
+		\note This message can be invalid, since it wasn't checked for sanity
+	*/
+	void(*m_onMessageDetected)(struct XsCallbackPlainC* thisPtr, struct XsDevice* dev, XsProtocolType type, struct XsByteArray const * rawMessage);
 
 	/*! \brief Called just after a valid message (after parsing) is received from the device.
 		\param dev The device that sent the message

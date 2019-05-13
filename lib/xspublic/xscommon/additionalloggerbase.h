@@ -45,14 +45,14 @@ class AdditionalLoggerBase : public virtual AbstractAdditionalLogger
 public:
 	AdditionalLoggerBase(JournalLogLevel initialLogLevel = JLL_Alert);
 
-	virtual JournalLogLevel logLevel() const override;
-	virtual JournalLogLevel debugLevel() const override;
-	virtual void setLogLevel(JournalLogLevel level) override;
-	virtual void setDebugLevel(JournalLogLevel level) override;
+	JournalLogLevel logLevel() const override;
+	JournalLogLevel debugLevel() const override;
+	void setLogLevel(JournalLogLevel level) override;
+	void setDebugLevel(JournalLogLevel level) override;
 
 	bool logLevel(JournalLogLevel level) const override;
 
-	virtual void logNoDecoration(JournalLogLevel level, char const * file, int line, char const * function, std::string const & msg) override;
+	void logNoDecoration(JournalLogLevel level, char const * file, int line, char const * function, std::string const & msg) override;
 
 protected:
 	virtual void onLogLevelChanged(JournalLogLevel newLevel, JournalLogLevel oldLevel);

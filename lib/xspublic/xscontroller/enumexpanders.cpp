@@ -47,6 +47,7 @@ JLENUMEXPANDER(XsOperationalMode,
 	JLENUMCASE(XOP_Unknown)
 	JLENUMCASE(XOP_LiveStream)
 	JLENUMCASE(XOP_Obr)
+	JLENUMCASE(XOP_Wobr)
 )
 
 JLENUMEXPANDER(XsConnectivityState,

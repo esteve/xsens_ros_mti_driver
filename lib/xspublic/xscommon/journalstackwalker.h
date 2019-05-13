@@ -57,7 +57,7 @@ public:
 	/*! \brief Handles the output from stack
 		\param szText The string that contains stack output
 	*/
-	virtual void OnOutput(LPCSTR szText) override
+	void OnOutput(LPCSTR szText) override
 	{
 		m_journaller->writeMessage(szText);
 		m_journaller->writeMessage("\n");

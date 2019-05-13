@@ -36,7 +36,7 @@
 
 #include <xscommon/threading.h>
 #include <xscommon/xprintf.h>
-#include <xstypes/xsens_debugtools.h>
+#include <xscommon/xsens_debugtools.h>
 #include <xscommon/xsens_janitors.h>
 #include <xstypes/xsportinfo.h>
 #include "iointerfacefile.h"
@@ -249,6 +249,7 @@ std::deque<XsMessage> MtbFileCommunicator::readMessagesFromStartOfFile(uint8_t m
 	m_extractedMessages = new std::deque<XsMessage>;
 	JanitorStdFunc0<> resetExtractor([this, ex, exm, oldPos]()
 	{
+		delete this->m_extractedMessages;
 		delete this->m_extractor;
 		this->m_extractor = ex;
 		this->m_extractedMessages = exm;
@@ -640,7 +641,7 @@ XsMessage MtbFileCommunicator::readMessage(uint8_t msgId)
 
 	do
 	{
-		 msg = readNextMessage();
+		msg = readNextMessage();
 	}
 	while (!msg.empty() && msgId != 0 && msg.getMessageId() != msgId);
 
@@ -666,7 +667,7 @@ XsMessage MtbFileCommunicator::readNextMessage()
 			setLastResult(XRV_ENDOFFILE);
 			return XsMessage();
 		}
-		m_extractor->processNewData(raw, *m_extractedMessages);
+		m_extractor->processNewData(masterDevice(), raw, *m_extractedMessages);
 	}
 
 	setLastResult(XRV_OK);

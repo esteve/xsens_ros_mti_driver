@@ -49,6 +49,7 @@ void XsPortInfo_clear(XsPortInfo* thisPtr)
 {
 	thisPtr->m_baudrate = XBR_Invalid;
 	thisPtr->m_deviceId.m_deviceId = 0;
+	thisPtr->m_deviceId.m_productCode[0] = '\0';
 	thisPtr->m_portName[0] = '\0';
 	thisPtr->m_linesOptions = XPLO_All_Ignore;
 }

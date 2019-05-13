@@ -76,7 +76,7 @@ typedef enum XsPortLinesOptions
 {
 	XPLO_Invalid	= 0,
 
-	XPLO_RTS_Set	= (1 << 0),
+	XPLO_RTS_Set	= 1,
 	XPLO_RTS_Clear	= (1 << 1),
 	XPLO_RTS_Ignore	= (1 << 2),
 

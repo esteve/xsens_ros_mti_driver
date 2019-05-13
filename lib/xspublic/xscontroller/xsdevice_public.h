@@ -47,7 +47,7 @@ namespace xsens {
 struct XsDeviceEx : public XsDevice
 {
 protected:
-	//!	Construct a device using \a comm for communication
+	//! Construct a device using \a comm for communication
 	explicit XsDeviceEx(Communicator* comm) : XsDevice(comm) {}
 
 	//! Construct a device using a device id \a id
@@ -58,9 +58,6 @@ protected:
 
 	//! Destroy the device
 	virtual ~XsDeviceEx() {}
-
-	//! Initialize the device with a settings file
-	virtual bool initialize(const xsens::SettingsFile&) {return true;}
 };
 
 #endif

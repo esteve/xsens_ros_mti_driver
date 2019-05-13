@@ -113,5 +113,7 @@ void StackWalker::ShowCallstack()
 
 		OnOutput(logLine);
 	}
+#else
+	OnOutput("Stack trace is not available");
 #endif
 }

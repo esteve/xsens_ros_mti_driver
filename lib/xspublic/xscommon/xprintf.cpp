@@ -48,7 +48,7 @@ std::string _xprintf_b(std::string const& fmt_str, int bSize, ...)
 
 	va_list ap;
 	va_start(ap, bSize);
-	int nResult = vsnprintf(static_cast<char*>(buffer.get()), bSize, fmt_str.c_str(), ap);
+	int nResult = vsnprintf(static_cast<char*>(buffer.get()), (unsigned int) bSize, fmt_str.c_str(), ap);
 	va_end(ap);
 
 	if (nResult < 0 || nResult >= bSize)

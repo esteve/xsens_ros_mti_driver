@@ -69,7 +69,7 @@ struct XsOutputConfigurationArray : public XsArrayImpl<XsOutputConfiguration, g_
 	}
 
 	//! \brief Constructs an XsOutputConfigurationArray that references the data supplied in \a ref
-	inline explicit XsOutputConfigurationArray(XsOutputConfiguration* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsOutputConfigurationArray(XsOutputConfiguration* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: ArrayImpl(ref, sz, flags)
 	{
 	}

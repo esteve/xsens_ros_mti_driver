@@ -38,6 +38,7 @@
 #include <xstypes/xsportinfoarray.h>
 #include <xstypes/xsbaudrate.h>
 #include "xsusbhubinfo.h"
+#include "xsscanner.h"
 
 #include <atomic>
 
@@ -71,11 +72,26 @@ struct Scanner
 	virtual bool xsEnumerateNetworkDevice(XsPortInfoArray& ports);
 
 	XsUsbHubInfo xsScanUsbHub(const XsPortInfo& portInfo);
+
+	static void setScanLogCallback(XsScanLogCallbackFunc cb);
 };
 
 namespace XsScannerNamespace {
 	extern volatile std::atomic_bool abortPortScan;
 	extern Scanner* gScanner;
+	extern XsScanLogCallbackFunc gScanLogCallback;
 }
+
+#define LOGXSSCAN(msg)\
+	do {\
+		JLDEBUGG(msg); \
+		if (XsScannerNamespace::gScanLogCallback) \
+		{ \
+			std::ostringstream os; \
+			os << msg; \
+			const XsString cbVal(os.str()); \
+			XsScannerNamespace::gScanLogCallback(&cbVal); \
+		} \
+	} while(0)
 
 #endif

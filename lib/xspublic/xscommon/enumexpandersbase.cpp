@@ -141,6 +141,14 @@ JLENUMEXPANDER(XsResultValue,
 	JLENUMCASE(XRV_EXPECTED_DISCONNECT	) // 317	//!< 317: The device was disconnected
 	JLENUMCASE(XRV_RESTORE_COMMUNICATION_FAILED ) // 318	//!< 318: Restore communication failed
 	JLENUMCASE(XRV_RESTORE_COMMUNICATION_STOPPED) // 319	//!< 319: Restore communication was stopped
+	JLENUMCASE(XRV_EXPECTED_CONNECT) // 320	//!< 320: The device was connected
+
+	JLENUMCASE(XRV_FILEERROR)
+	JLENUMCASE(XRV_STOPRECORDINGFAILED)
+	JLENUMCASE(XRV_GNSSCONFIGURATIONERROR)
+	JLENUMCASE(XRV_GNSSCOMMTIMEOUT)
+	JLENUMCASE(XRV_GNSSERROR)
+	JLENUMCASE(XRV_OUTPUTCONFIGERROR)
 
 	// notifications
 	JLENUMCASE(XRV_SHUTTINGDOWN			) // 400	//!< 400: The device is shutting down
@@ -176,8 +184,8 @@ JLENUMEXPANDERHEX(XsXbusMessageId,
 	JLENUMCASE(XMID_ReqBluetoothDisableAck   	) // 0x15,
 	//JLENUMCASE(XMID_DisableBluetooth         	) // 0x14,
 	//JLENUMCASE(XMID_DisableBluetoothAck      	) // 0x15,
-	JLENUMCASE(XMID_ReqXmOutputMode          	) // 0x16,
-	JLENUMCASE(XMID_ReqXmOutputModeAck       	) // 0x17,
+	JLENUMCASE(XMID_ReqBodypackMode          	) // 0x16,
+	JLENUMCASE(XMID_ReqBodypackAck          	) // 0x17,
 	//JLENUMCASE(XMID_SetXmOutputMode          	) // 0x16,
 	//JLENUMCASE(XMID_SetXmOutputModeAck       	) // 0x17,
 	JLENUMCASE(XMID_ReqBaudrate              	) // 0x18,
@@ -259,6 +267,13 @@ JLENUMEXPANDERHEX(XsXbusMessageId,
 	JLENUMCASE(XMID_FactoryTestResults         ) // 0x57,
 	JLENUMCASE(XMID_FactoryTestConnect         ) // 0x58,
 	JLENUMCASE(XMID_FactoryTestConnectAck      ) // 0x59,
+	JLENUMCASE(XMID_SetDataOutputDelay)			// 0x5A,
+	JLENUMCASE(XMID_SetDataOutputDelayAck)		// 0x5B,
+	JLENUMCASE(XMID_SetBodypackConfigFile)		// 0x5C,
+	JLENUMCASE(XMID_SetBodypackConfigFileAck)	// 0x5D,
+	JLENUMCASE(XMID_ReqObrStatus)				// 0x5E,
+	JLENUMCASE(XMID_ObrStatus)					// 0x5F,
+
 	//JLENUMCASE(XMID_SetUtcTime               	) // 0x60,
 	JLENUMCASE2(XMID_ReqUtcTime, "XMID_ReqUtcTime/XMID_FactoryTestSensorTiming"               	) // 0x60,
 	JLENUMCASE2(XMID_SetUtcTimeAck, "XMID_ReqUtcTimeAck/XMID_FactoryTestSensorTimingResults"             	) // 0x61,
@@ -351,8 +366,8 @@ JLENUMEXPANDERHEX(XsXbusMessageId,
 	JLENUMCASE(XMID_RestoreEmtsAck			  	) // 0x95,
 	JLENUMCASE(XMID_StoreEmts			      	) // 0x96,
 	JLENUMCASE(XMID_StoreEmtsAck			  	) // 0x97,
-	JLENUMCASE(XMID_AdjustUtcTime				) // 0xA8,
-	JLENUMCASE(XMID_AdjustUtcTimeAck			) // 0xA9,
+	JLENUMCASE(XMID_ClockSyncCommand)			// 0x9A,
+	JLENUMCASE(XMID_ClockSyncCommandAck)		// 0x9B,
 	JLENUMCASE(XMID_ReqActiveClockCorrection  	) // 0x9C,
 	JLENUMCASE(XMID_ActiveClockCorrection    	) // 0x9D,
 	JLENUMCASE(XMID_StoreActiveClockCorrection ) // 0x9E,
@@ -369,6 +384,8 @@ JLENUMEXPANDERHEX(XsXbusMessageId,
 	JLENUMCASE(XMID_ResetOrientationAck      	) // 0xA5,
 	JLENUMCASE(XMID_ReqGnssStatus             	) // 0xA6,
 	JLENUMCASE(XMID_GnssStatus                	) // 0xA7,
+	JLENUMCASE(XMID_AdjustUtcTime) // 0xA8,
+	JLENUMCASE(XMID_AdjustUtcTimeAck) // 0xA9,
 	JLENUMCASE(XMID_ReqComponentsInformation	) // 0xAA,
 	JLENUMCASE(XMID_ComponentsInformation		) // 0xAB,
 	JLENUMCASE(XMID_ReqAccessControlList		) // 0xAE,
@@ -459,6 +476,20 @@ JLENUMEXPANDERHEX(XsXbusMessageId,
 	JLENUMCASE(XMID_ExtensionReserved2         ) // 0xEF,
 	JLENUMCASE(XMID_SetDeviceIdContext			) // 0xFE,
 	JLENUMCASE(XMID_SetDeviceIdContextAck		) // 0xFF
+
+	JLENUMCASE(XMID_ReqHardwareVersion)
+	JLENUMCASE(XMID_HardwareVersion)
+	JLENUMCASE(XMID_Warning)
+	JLENUMCASE(XMID_ReqDeviceCapabilities)
+	JLENUMCASE(XMID_DeviceCapabilities)
+	JLENUMCASE(XMID_DiscardRetransmissions)
+	JLENUMCASE(XMID_DiscardRetransmissionsAck)
+	JLENUMCASE(XMID_ReqErrorReport)
+	JLENUMCASE(XMID_ErrorReport)
+	JLENUMCASE(XMID_ReqGnssReceiverSettings)
+	JLENUMCASE(XMID_ReqGnssReceiverSettingsAck)
+	JLENUMCASE(XMID_ForwardGnssData)
+	JLENUMCASE(XMID_ForwardGnssDataAck)
 );
 
 static void forceEnumExpanderInclusion()

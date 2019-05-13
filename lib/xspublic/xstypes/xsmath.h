@@ -74,8 +74,10 @@ XSTYPES_DLL_API XsReal XsMath_pow3(XsReal a);
 XSTYPES_DLL_API XsReal XsMath_asinClamped(XsReal x);
 XSTYPES_DLL_API int XsMath_isFinite(XsReal x);
 XSTYPES_DLL_API int32_t XsMath_doubleToLong(double d);
+XSTYPES_DLL_API int32_t XsMath_floatToLong(float d);
 #ifndef XSENS_NO_INT64
 XSTYPES_DLL_API int64_t XsMath_doubleToInt64(double d);
+XSTYPES_DLL_API int64_t XsMath_floatToInt64(float d);
 #endif
 
 #ifdef __cplusplus

@@ -30,33 +30,60 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef XSDEVICEOPTIONFLAG_H
-#define XSDEVICEOPTIONFLAG_H
+#ifndef XSFILTERPROFILEARRAY_H
+#define XSFILTERPROFILEARRAY_H
 
-/*!	\addtogroup enums Global enumerations
-@{
-*/
-/*! \brief Used to enable or disable some device options
-	\sa XsDevice::setDeviceOptionFlags
-	\note Not all devices support all options.
-*/
-enum XsDeviceOptionFlag
-{
-	XDOF_DisableAutoStore				= 0x00000001,	//!< When set to 1, automatic writing of configuration will be disabled.
-	XDOF_DisableAutoMeasurement			= 0x00000002,	//!< When set to 1, the MT will stay in Config Mode upon start up.
-	XDOF_EnableBeidou					= 0x00000004,	//!< When set to 1, enables Beidou, disables GLONASS (MTi-G).
-	XDOF_DisableGps						= 0x00000008,	//!< When set to 1, disables GPS (MTi-G).
-	XDOF_EnableAhs						= 0x00000010,	//!< When set to 1, the MTi will have Active Heading Stabilization (AHS) enabled.
-	XDOF_EnableOrientationSmoother		= 0x00000020,	//!< When set to 1, the MTi will have Orientation Smoother enabled. Only applicable to MTi-G-710 and MTi-7
-	XDOF_EnableConfigurableBusId		= 0x00000040,	//!< When set to 1, allows to configure the BUS ID.
-	XDOF_EnableInrunCompassCalibration	= 0x00000080,	//!< When set to 1, the MTi will have In-run Compass Calibration (ICC) enabled.
-	XDOF_DisableSleepMode				= 0x00000100,	//!< When set to 1, an MTw will not enter sleep mode after a scan timeout. It will scan indefinitely.
-	XDOF_EnableConfigMessageAtStartup	= 0x00000200,	//!< When set to 1, the MT will send the Configuration to the Master at start-up
+#include "xstypesconfig.h"
+#include "xsarray.h"
 
-	XDOF_None							= 0x00000000,	//!< When set to 1, disables all option flags.
-	XDOF_All							= 0xFFFFFFFF	//!< When set to 1, enables all option flags.
+#ifdef __cplusplus
+#include "xsfilterprofile.h"
+extern "C" {
+#endif
+
+extern XsArrayDescriptor const XSTYPES_DLL_API g_xsFilterProfileArrayDescriptor;
+
+#ifndef __cplusplus
+#define XSFILTERPROFILEARRAY_INITIALIZER	XSARRAY_INITIALIZER(&g_xsFilterProfileArrayDescriptor)
+
+struct XsFilterProfile;
+
+XSARRAY_STRUCT(XsFilterProfileArray, struct XsFilterProfile);
+typedef struct XsFilterProfileArray XsFilterProfileArray;
+
+XSTYPES_DLL_API void XsFilterProfileArray_construct(XsFilterProfileArray* thisPtr, XsSize count, struct XsFilterProfile const* src);
+#else
+} // extern "C"
+#endif
+
+#ifdef __cplusplus
+struct XsFilterProfileArray : public XsArrayImpl<XsFilterProfile, g_xsFilterProfileArrayDescriptor, XsFilterProfileArray> {
+	//! \brief Constructs an XsFilterProfileArray
+	inline explicit XsFilterProfileArray(XsSize sz = 0, XsFilterProfile const* src = 0)
+		 : ArrayImpl(sz, src)
+	{
+	}
+
+	//! \brief Constructs an XsFilterProfileArray as a copy of \a other
+	inline XsFilterProfileArray(XsFilterProfileArray const& other)
+		 : ArrayImpl(other)
+	{
+	}
+
+	//! \brief Constructs an XsFilterProfileArray that references the data supplied in \a ref
+	inline explicit XsFilterProfileArray(XsFilterProfile* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
+		: ArrayImpl(ref, sz, flags)
+	{
+	}
+
+#ifndef XSENS_NOITERATOR
+	//! \brief Constructs an XsFilterProfileArray with the array bound by the supplied iterators \a beginIt and \a endIt
+	template <typename Iterator>
+	inline XsFilterProfileArray(Iterator beginIt, Iterator endIt)
+		: ArrayImpl(beginIt, endIt)
+	{
+	}
+#endif
 };
-/* @} */
-typedef enum  XsDeviceOptionFlag XsDeviceOptionFlag;
-
+#endif
 #endif

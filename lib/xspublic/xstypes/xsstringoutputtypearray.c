@@ -30,29 +30,61 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef XSRESETMETHOD_H
-#define XSRESETMETHOD_H
+#include "xsstringoutputtypearray.h"
+#include <memory.h>
+#include <string.h>
 
-/*!	\addtogroup enums Global enumerations
-	@{
+/*! \struct XsStringOutputTypeArray
+	\brief A list of XsStringOutputType values
+	\sa XsArray
 */
 
-//AUTO namespace xscontroller {
-/*! \brief Orientation reset type. */
-enum XsResetMethod {
-	XRM_StoreAlignmentMatrix	= 0,				//!< \brief Store the current object alignment matrix to persistent memory
-	XRM_Heading					= 1,				//!< \brief Reset the heading (yaw)
-	XRM_Object					= 3,				//!< \brief Reset the attitude (roll, pitch), same as XRM_Inclination
-	XRM_Inclination				= XRM_Object,		//!< \brief Reset the inclination (roll, pitch), same as XRM_Object
-	XRM_Alignment				= 4,				//!< \brief Reset heading and attitude \details This effectively combines the XRM_Heading and XRM_Object
-	XRM_Global					= XRM_Alignment,	//!< \brief Reset the full orientation of the device \details Obsolete. Use XRM_Alignment instead.
-	XRM_DefaultHeading			= 5,				//!< \brief Revert to default behaviour for heading, undoes XRM_Heading
-	XRM_DefaultInclination		= 6,				//!< \brief Revert to default behaviour for inclination, undoes XRM_Inclination
-	XRM_DefaultAlignment		= 7,				//!< \brief Revert to default behaviour for heading and inclination, undoes any reset
-	XRM_None										//!< \brief No reset planned
-};
-/*! @} */
-typedef enum XsResetMethod XsResetMethod;
-//AUTO }
+/*! \copydoc XsArrayDescriptor::itemSwap
+	\note Specialization for XsStringOutputType
+*/
+void swapStringOutputType(XsStringOutputType* a, XsStringOutputType* b)
+{
+	XsStringOutputType tmp = *a;
+	*a = *b;
+	*b = tmp;
+}
 
-#endif
+/*! \copydoc XsArrayDescriptor::itemCopy
+	\note Specialization for XsStringOutputType
+*/
+void copyStringOutputType(XsStringOutputType* to, XsStringOutputType const* from)
+{
+	*to = *from;
+}
+
+/*! \copydoc XsArrayDescriptor::itemCompare
+	\note Specialization for XsStringOutputType
+*/
+int compareStringOutputType(XsStringOutputType const* a, XsStringOutputType const* b)
+{
+	if (*a < *b)
+		return -1;
+	if (*a > *b)
+		return 1;
+	return 0;
+}
+
+//! \brief Descriptor for XsStringOutputTypeArray
+XsArrayDescriptor const g_xsStringOutputTypeArrayDescriptor = {
+	sizeof(XsStringOutputType),
+	XSEXPCASTITEMSWAP swapStringOutputType,			// swap
+	0,												// construct
+	(XsArrayItemCopyFunc)copyStringOutputType,		// copy construct
+	0,												// destruct
+	(XsArrayItemCopyFunc)copyStringOutputType,		// copy
+	(XsArrayItemCompareFunc)compareStringOutputType,// compare
+	XSEXPCASTRAWCOPY XsArray_rawCopy
+};
+
+/*! \copydoc XsArray_construct
+	\note Specialization for XsStringOutputTypeArray
+*/
+void XsStringOutputTypeArray_construct(XsStringOutputTypeArray* thisPtr, XsSize count, XsStringOutputType const* src)
+{
+	XsArray_construct(thisPtr, &g_xsStringOutputTypeArrayDescriptor, count, src);
+}

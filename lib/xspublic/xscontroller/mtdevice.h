@@ -30,20 +30,12 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-// half-public file, c++-source code only
-
 #ifndef MTDEVICE_H
 #define MTDEVICE_H
 
 #include "xsdevice_def.h"
-#include <xstypes/xsquaternion.h>
-#include <xstypes/xsvector.h>
-#include <xstypes/xsushortvector.h>
-#include "xsfilterprofile.h"
-#include "xsfilterprofile.h"
-#include "xsselftestresult.h"
-#include "xserrormode.h"
-#include "xsresetmethod.h"
+#include <xstypes/xsstringarray.h>
+#include <xstypes/xsfilterprofilearray.h>
 
 struct XsFilterProfile;
 
@@ -61,7 +53,7 @@ public:
 	MtDevice();
 	virtual ~MtDevice();
 
-	bool initialize(const xsens::SettingsFile&) override;
+	bool initialize() override;
 
 	bool isMotionTracker() const override;
 	int updateRateForDataIdentifier(XsDataIdentifier dataType) const override;
@@ -84,7 +76,6 @@ public:
 
 	virtual bool setLocationId(int id);
 	int locationId() const;
-	int dataLength() const;
 
 	XsString productCode() const;
 
@@ -94,10 +85,11 @@ public:
 
 	XsFilterProfile onboardFilterProfile() const override;
 	bool setOnboardFilterProfile(int profileType) override;
+	bool setOnboardFilterProfile(XsString const& profileType) override;
 
 	XsVersion hardwareVersion() const;
 
-	std::vector<XsFilterProfile> availableOnboardFilterProfiles() const;
+	XsFilterProfileArray availableOnboardFilterProfiles() const override;
 
 	bool resetLogFileReadPosition() override;
 
@@ -127,37 +119,24 @@ public:
 	static int calcFrequency(int baseFrequency, uint16_t skipFactor);
 
 	bool messageLooksSane(const XsMessage &msg) const;
+	uint32_t supportedStatusFlags() const override;
 
 protected:
 	explicit MtDevice(Communicator* comm);
 	explicit MtDevice(MtContainer *, const XsDeviceId &);
 
-	bool updateScenarios();
+	virtual void updateFilterProfiles();
 
-	virtual bool setOnboardFilterProfile(const XsFilterProfile &scenario);
-	std::vector<XsFilterProfile> readFilterProfilesFromDevice() const;
+	XsFilterProfileArray readFilterProfilesFromDevice() const;
 	virtual void fetchAvailableHardwareScenarios();
 
 	uint32_t syncTicksToUs(uint32_t ticks) const;
 	uint32_t usToSyncTicks(uint32_t us) const;
 
 	//! A vector of hardware filter profiles
-	std::vector<XsFilterProfile> m_hardwareFilterProfiles;
-
-	//! \brief Struct for comparison of filter profiles
-	struct CompareXsFilterProfile {
-
-		/*! \brief Compares filter profiles
-			\param left The first filter profile
-			\param right The second filter profile
-			\returns True if both filter profiles are the same
-		*/
-		bool operator() (XsFilterProfile const & left, XsFilterProfile const & right) const;
-	};
+	XsFilterProfileArray m_hardwareFilterProfiles;
 
 protected:
-	//! \returns True if the legacy output is supported
-	virtual bool supportsLegacyOutput() const { return true; }
 
 	//! \brief A hardware filter profile
 	XsFilterProfile m_hardwareFilterProfile;

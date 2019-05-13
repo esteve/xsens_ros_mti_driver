@@ -58,6 +58,7 @@ public:
 	void onInfoResponse(XsDevice* dev, XsInfoRequest request) override;
 	void onError(XsDevice* dev, XsResultValue error) override;
 	void onNonDataMessage(XsDevice* dev, XsMessage const * message) override;
+	void onMessageDetected(XsDevice* dev, XsProtocolType type, XsByteArray const * rawMessage) override;
 	void onMessageReceivedFromDevice(XsDevice* dev, XsMessage const * message) override;
 	void onMessageSentToDevice(XsDevice* dev, XsMessage const * message) override;
 	void onDataAvailable(XsDevice* dev, const XsDataPacket* data) override;

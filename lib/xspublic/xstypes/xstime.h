@@ -133,13 +133,13 @@ namespace XsTime {
 	}
 
 	//! \copydoc XsTime_msleep
-	inline void msleep(uint32_t ms)
+	inline void msleep(uint32_t ms) noexcept
 	{
 		XsTime_msleep(ms);
 	}
 
 	//! \copydoc XsTime_udelay
-	inline void udelay(uint64_t us)
+	inline void udelay(uint64_t us) noexcept
 	{
 		XsTime_udelay(us);
 	}
@@ -158,4 +158,4 @@ namespace XsTime {
 }
 #endif
 
-#endif	// file guard
+#endif

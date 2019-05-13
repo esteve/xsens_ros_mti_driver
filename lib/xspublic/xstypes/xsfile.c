@@ -85,6 +85,15 @@ XsResultValue XsFile_create(struct XsFile *thisPtr, const struct XsString* filen
 	if (thisPtr->m_handle != NULL)
 		return XRV_ALREADYOPEN;
 
+#ifdef _WIN32
+	wchar_t filenameW[XS_MAX_FILENAME_LENGTH];
+	// actively delete the file first to ensure that the file creation time is properly set
+	XsString_copyToWCharArray(filename, filenameW, XS_MAX_FILENAME_LENGTH);
+	(void) _wunlink(filenameW);	// don't care about return value
+#else
+	unlink(filename->m_data);
+#endif
+
 	if (writeOnly)
 	{
 		XsString_assign(&mode, 3, "wb");
@@ -203,7 +212,7 @@ XsResultValue XsFile_openText(struct XsFile *thisPtr, const struct XsString* fil
 }
 
 /*! \brief Helper for file opening */
-FILE* openFile(const struct XsString* filename, const struct XsString* mode)
+static FILE* openFile(const struct XsString* filename, const struct XsString* mode)
 {
 #ifdef _WIN32
 	wchar_t filenameW[XS_MAX_FILENAME_LENGTH];
@@ -391,19 +400,19 @@ XsResultValue XsFile_erase(const struct XsString* filename)
 */
 XsFilePos XsFile_read(struct XsFile *thisPtr, void *destination, XsFilePos size, XsFilePos count)
 {
-	return fread(destination, (size_t) size, (size_t) count, thisPtr->m_handle);
+	return (XsFilePos) fread(destination, (size_t) size, (size_t) count, thisPtr->m_handle);
 }
 
 /*!	\relates XsFile
 	\brief Writes a number of elements to a file
 	\param source Buffer that contains the elements to be written
-	\param size Size of each individual element to read
+	\param size Size of each individual element to write
 	\param count Number of elements to write
 	\returns Total number of elements successfully written
 */
 XsFilePos XsFile_write(struct XsFile *thisPtr, const void *source, XsFilePos size, XsFilePos count)
 {
-	return fwrite(source, (size_t) size, (size_t) count, thisPtr->m_handle);
+	return (XsFilePos) fwrite(source, (size_t) size, (size_t) count, thisPtr->m_handle);
 }
 
 /*!	\relates XsFile
@@ -478,7 +487,7 @@ XsResultValue XsFile_seek_r(struct XsFile *thisPtr, XsFilePos offset)
 	\brief Returns the current position in the file
 	\returns Current position in the current file
 */
-XsFilePos XsFile_tell(struct XsFile *thisPtr)
+XsFilePos XsFile_tell(struct XsFile const* thisPtr)
 {
 #ifdef _WIN32
 	return _ftelli64(thisPtr->m_handle);
@@ -490,7 +499,7 @@ XsFilePos XsFile_tell(struct XsFile *thisPtr)
 /*!	\relates XsFile
 	\returns Returns 0 if the current file position is not 'end of file', non 0 if the position is 'end of file'
 */
-int XsFile_eof(struct XsFile *thisPtr)
+int XsFile_eof(struct XsFile const* thisPtr)
 {
 	return feof(thisPtr->m_handle);
 }
@@ -498,7 +507,7 @@ int XsFile_eof(struct XsFile *thisPtr)
 /*!	\relates XsFile
 	\returns Returns XRV_ERROR if the error flag for the file has been set, XRV_OK otherwise
 */
-XsResultValue XsFile_error(struct XsFile *thisPtr)
+XsResultValue XsFile_error(struct XsFile const* thisPtr)
 {
 	return ferror(thisPtr->m_handle) ? XRV_ERROR : XRV_OK;
 }
@@ -575,6 +584,5 @@ FILE* XsFile_handle(struct XsFile *thisPtr)
 {
 	return thisPtr->m_handle;
 }
-
 
 /*! @} */

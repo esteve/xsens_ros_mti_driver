@@ -69,7 +69,7 @@ DataPacketPrivate::~DataPacketPrivate()
 	\note This does NOT manipulate the ref count and it shouldn't.
 	\return A reference to this
 */
-const DataPacketPrivate& DataPacketPrivate::operator = (const DataPacketPrivate& p)
+DataPacketPrivate& DataPacketPrivate::operator = (const DataPacketPrivate& p)
 {
 	if (this != &p)
 	{
@@ -130,7 +130,7 @@ void DataPacketPrivate::erase(XsDataIdentifier id)
 }
 
 /*! \brief Remove the item at \a it, cleaning up associated data */
-void DataPacketPrivate::erase(MapType::const_iterator it)
+void DataPacketPrivate::erase(MapType::const_iterator const& it)
 {
 	delete it->second;
 	MapType::erase(it);

@@ -74,7 +74,9 @@ public:
 	bool setObjectAlignment(const XsMatrix &matrix) override;
 	bool setGravityMagnitude(double mag) override;
 	bool setXdaFilterProfile(int profileType) override;
+	bool setXdaFilterProfile(XsString const& profileType) override;
 	bool setOnboardFilterProfile(int profileType) override;
+	bool setOnboardFilterProfile(XsString const& profileType) override;
 	bool setNoRotation(uint16_t duration) override;
 	bool setInitialPositionLLA(const XsVector& lla) override;
 	bool storeFilterState() override;

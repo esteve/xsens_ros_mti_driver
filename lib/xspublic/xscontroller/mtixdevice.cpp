@@ -68,7 +68,9 @@ MtiBaseDevice::BaseFrequencyResult MtiXDevice::getBaseFrequencyInternal(XsDataId
 	result.m_frequency = 0;
 	result.m_divedable = true;
 
-	if (dataType == XDI_FreeAcceleration && deviceId().isImu())
+	if ((dataType == XDI_FreeAcceleration && deviceId().isImu()) ||
+		((dataType & XDI_FullTypeMask) == XDI_LocationId) ||
+		((dataType & XDI_FullTypeMask) == XDI_DeviceId))
 		return result;
 
 	if ((dataType & XDI_FullTypeMask) == XDI_AccelerationHR || (dataType & XDI_FullTypeMask) == XDI_RateOfTurnHR)
@@ -127,14 +129,6 @@ XsByteArray MtiXDevice::componentsInformation() const
 	return componentsInfo;
 }
 
-void MtiXDevice::fetchAvailableHardwareScenarios()
-{
-	if (deviceId().isImu())								// If we are a 1 type device,
-		m_hardwareFilterProfiles.clear();					// there are no filter profiles in the firmware.
-	else													// For other device types,
-		MtiBaseDeviceEx::fetchAvailableHardwareScenarios();		// fetch the scenarios.
-}
-
 /*! \returns The sync settings line for a mtmk4_x device. This overrides the base class method.
 	\param buff The pointer to a buffer to get a sync setting line from
 	\param offset The offeset to set for the buffer
@@ -163,4 +157,31 @@ uint8_t MtiXDevice::syncLine(const XsSyncSetting& setting) const
 bool MtiXDevice::hasIccSupport() const
 {
 	return (firmwareVersion() >= XsVersion(1, 1, 0));
+}
+
+uint32_t MtiXDevice::supportedStatusFlags() const
+{
+	return (uint32_t) (0
+		| (deviceId().isImu() ? 0 : XSF_OrientationValid
+			|XSF_NoRotationMask
+			|XSF_RepresentativeMotion
+			)
+		|XSF_ExternalClockSynced
+		|XSF_ClipAccX
+		|XSF_ClipAccY
+		|XSF_ClipAccZ
+		|XSF_ClipGyrX
+		|XSF_ClipGyrY
+		|XSF_ClipGyrZ
+		|XSF_ClipMagX
+		|XSF_ClipMagY
+		|XSF_ClipMagZ
+		//|XSF_Retransmitted
+		|XSF_ClippingDetected
+		//|XSF_Interpolated
+		|XSF_SyncIn
+		|XSF_SyncOut
+		//|XSF_FilterMode
+		//|XSF_HaveGnssTimePulse
+		);
 }

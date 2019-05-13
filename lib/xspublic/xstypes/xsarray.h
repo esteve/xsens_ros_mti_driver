@@ -51,19 +51,12 @@ typedef void (*XsArrayItemStructFunc)(void*);
 typedef void (*XsArrayItemCopyFunc)(void*, void const*);
 typedef int (*XsArrayItemCompareFunc)(void const*, void const*);	//!< \brief Custom item compare function \return 0 means the items are equal, negative and positive values may be returned for sorting
 typedef void (*XsArrayRawCopy)(void*, void const*, XsSize, XsSize);
-#if defined(__GNUC__) || (defined(__arm__) && defined(__ARMCC_VERSION))
+
 #define XSEXPCASTITEMSWAP	(XsArrayItemSwapFunc)
 #define XSEXPCASTITEMMAKE	(XsArrayItemStructFunc)
 #define XSEXPCASTITEMCOPY	(XsArrayItemCopyFunc)
 #define XSEXPCASTITEMCOMP	(XsArrayItemCompareFunc)
 #define XSEXPCASTRAWCOPY	(XsArrayRawCopy)
-#else
-#define XSEXPCASTITEMSWAP
-#define XSEXPCASTITEMMAKE
-#define XSEXPCASTITEMCOPY
-#define XSEXPCASTITEMCOMP
-#define XSEXPCASTRAWCOPY
-#endif
 /*! \endcond */
 
 /*! \brief This object describes how to treat the data in an array.
@@ -149,7 +142,7 @@ struct XsArray {
 		: m_data(ref)
 		, m_size(count)
 		, m_reserved(count)
-		, m_flags(flags)
+		, m_flags((XsSize)flags)
 		, m_descriptor(descriptor)
 	{
 	}
@@ -227,7 +220,7 @@ struct XsArrayImpl : private XsArray {
 	}
 #endif
 	//! \brief Creates the XsArray as a reference to the data supplied in \a ref
-	inline explicit XsArrayImpl<T, D, I>(T* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsArrayImpl<T, D, I>(T* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: XsArray(&D, ref, sz, flags)
 	{
 	}
@@ -337,28 +330,28 @@ protected:
 		inline IteratorImplBase(this_type const& i) : m_ptr(i.m_ptr) {}
 	public:
 		//! \brief Assignment operator
-		inline this_type operator =(void* p)
+		inline this_type& operator =(void* p)
 		{
 			m_ptr = (T*) p;
-			return this_type(m_ptr);
+			return *(this_type*)this;
 		}
 		//! \brief Assignment operator
-		inline this_type operator =(T* p)
+		inline this_type& operator =(T* p)
 		{
 			m_ptr = p;
-			return this_type(m_ptr);
+			return *(this_type*)this;
 		}
 		//! \brief Assignment operator
-		inline this_type operator =(this_type const& i)
+		inline this_type& operator =(this_type const& i)
 		{
 			m_ptr = i.m_ptr;
-			return this_type(m_ptr);
+			return *(this_type*)this;
 		}
 		//! \brief Prefix increment by one operator
-		inline this_type operator ++()
+		inline this_type& operator ++()
 		{
 			m_ptr = (T*) ptrAt(m_ptr, F);
-			return this_type(m_ptr);
+			return *(this_type*)this;
 		}
 		//! \brief Postfix increment by one operator
 		inline this_type operator ++(int)
@@ -368,10 +361,10 @@ protected:
 			return p;
 		}
 		//! \brief Prefix decrement by one operator
-		inline this_type operator --()
+		inline this_type& operator --()
 		{
 			m_ptr = (T*) ptrAt(m_ptr, -F);
-			return this_type(m_ptr);
+			return *(this_type*)this;
 		}
 		//! \brief Postfix decrement by one operator
 		inline this_type operator --(int)
@@ -381,16 +374,16 @@ protected:
 			return p;
 		}
 		//! \brief Increment by \a count operator
-		inline this_type operator +=(ptrdiff_t count)
+		inline this_type const& operator +=(ptrdiff_t count)
 		{
 			m_ptr = ptrAt(m_ptr, F*count);
-			return this_type(m_ptr);
+			return *(this_type*)this;
 		}
 		//! \brief Decrement by \a count operator
-		inline this_type operator -=(ptrdiff_t count)
+		inline this_type const& operator -=(ptrdiff_t count)
 		{
 			m_ptr = ptrAt(m_ptr, -F*count);
-			return this_type(m_ptr);
+			return *(this_type*)this;
 		}
 		//! \brief Addition by \a count operator
 		inline this_type operator +(ptrdiff_t count) const
@@ -506,7 +499,7 @@ public:
 	inline T & operator[] (XsSize index) const
 	{
 		assert(index < m_size);
-		return *ptrAt(m_data, index);
+		return *ptrAt(m_data, (ptrdiff_t) index);
 	}
 	/*! \brief indexed data access operator */
 	inline T& operator[] (XsSize index)
@@ -813,9 +806,23 @@ private:
 		\note The return value loses its constness, take care when using this function directly. In most cases
 		it should not be necessary to use this function in user code.
 	*/
-	inline static T* ptrAt(void const* ptr, ptrdiff_t count)
+	inline static const T* ptrAt(void const* ptr, ptrdiff_t count)
 	{
-		return (T*)(void*)(((char*)ptr)+count*D.itemSize);
+		return (const T*)(void const*)(((char const*)ptr)+count*(ptrdiff_t)D.itemSize);
+	}
+
+	/*! \internal
+		\brief Generic pointer movement function
+		\details This function adds \a count items to \a ptr based on the size specified in \a descriptor
+		\param ptr The pointer to start from
+		\param count The number of items to move up or down. count may be negative
+		\returns The requested pointer.
+		\note The return value loses its constness, take care when using this function directly. In most cases
+		it should not be necessary to use this function in user code.
+	*/
+	inline static T* ptrAt(void* ptr, ptrdiff_t count)
+	{
+		return (T*)(void*)(((char*)ptr)+count*(ptrdiff_t)D.itemSize);
 	}
 };
 #endif

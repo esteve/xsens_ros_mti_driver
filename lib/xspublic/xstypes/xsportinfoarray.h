@@ -69,7 +69,7 @@ struct XsPortInfoArray : public XsArrayImpl<XsPortInfo, g_xsPortInfoArrayDescrip
 	}
 
 	//! \brief Constructs an XsPortInfoArray that references the data supplied in \a ref
-	inline explicit XsPortInfoArray(XsPortInfo* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsPortInfoArray(XsPortInfo* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: ArrayImpl(ref, sz, flags)
 	{
 	}

@@ -33,8 +33,8 @@
 #ifndef XSENUMERATEUSBDEVICES_H
 #define XSENUMERATEUSBDEVICES_H
 
-#include <xstypes/xsportinfolist.h>
+#include <xstypes/xsportinfoarray.h>
 
-bool xsEnumerateUsbDevices(XsPortInfoList& ports);
+bool xsEnumerateUsbDevices(XsPortInfoArray& ports);
 
 #endif

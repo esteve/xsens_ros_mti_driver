@@ -34,6 +34,7 @@
 #define IPROTOCOLHANDLER_H
 
 #include "messagelocation.h"
+#include "xsprotocoltype.h"
 #include <xstypes/xsmessage.h>
 #include <xstypes/xsbytearray.h>
 
@@ -49,8 +50,8 @@ public:
 	virtual ~IProtocolHandler() {}
 
 	/*! \brief Find the first message in the \a raw byte stream
-		\details This function scans \a raw for a sequence of bytes that it can convert into an
-		%XsMessage object. It returns the location and total byte size of the message so that the
+		\details This function scans \a raw for a sequence of bytes that can contain a full message.
+		It returns the location and total byte size of the message so that the
 		caller can remove those bytes from the stream. The return value can also describe that a
 		partial message has been found. Return values:
 		\li \a startpos >= 0 and \a size > 0: A full message with \a size has been found at \a startpos.
@@ -58,11 +59,18 @@ public:
 		\li \a startpos >= 0 and \a size < 0: The start of a message has been found at \a startpos, and the size of the full message is at least \a -size.
 		\li \a startpos < 0: No messages have been found.
 
-		\param rcv If a message is read, it will be put in this object.
+		\param type The protocol type that was used.
 		\param raw The raw byte stream to analyze.
 		\returns A %MessageLocation object that describes what was found.
 	*/
-	virtual MessageLocation findMessage(XsMessage& rcv, const XsByteArray& raw) const = 0;
+	virtual MessageLocation findMessage(XsProtocolType& type, const XsByteArray& raw) const = 0;
+
+	/*! \brief Converts \a raw data using \a location into a %XsMessage object.
+		\param location The location of a message to convert from \a raw data.
+		\param raw The raw byte stream.
+		\returns A %XsMessage object that was converted from raw byte stream.
+	*/
+	virtual XsMessage convertToMessage(MessageLocation& location, const XsByteArray& raw) const = 0;
 
 	/*! \brief Returns the minimum size of a valid message
 		\details This value may differ for different protocols, but is always at least 1.

@@ -30,63 +30,57 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef NMEA_VALUE_H
-#define NMEA_VALUE_H
+#ifndef XSMTI6X0DEVICE_H
+#define XSMTI6X0DEVICE_H
 
-#include <ostream>
-#include <string.h>
+#include "mtibasedevice.h"
 
-namespace nmea
-{
+class MtContainer;
 
-/*! \class Value
-	\brief A class for a NMEA value
+/*! \class Mti6X0Device
+	\brief The MTi device used for the 6X0-series
 */
-template <typename T>
-class Value
+class Mti6X0Device : public MtiBaseDeviceEx
 {
 public:
+	//! \copybrief MtiXDevice::constructStandalone
+	static XsDevice* constructStandalone(Communicator* comm)
+	{
+		return new Mti6X0Device(comm);
+	}
 
-	/*! \brief Default constructor
-	*/
-	Value() : m_valid(false) {memset(&m_value, 0, sizeof(T));}
+	explicit Mti6X0Device(Communicator* comm);
 
-	/*! \brief Explicit constructor
-	*/
-	explicit Value(T val) : m_value(val), m_valid(true) {}
+	//! \brief An empty constructor for a master device
+	explicit Mti6X0Device(MtContainer *master) : MtiBaseDeviceEx(master) {}
+	virtual ~Mti6X0Device();
 
-	/*! \returns True if value is valid
-	*/
-	bool valid() const {return m_valid;}
+	XsByteArray componentsInformation() const override;
+	uint32_t supportedStatusFlags() const override;
 
-	/*! \returns The value object
-	*/
-	T value() const {return m_value;}
+protected:
+	XsSyncLine syncSettingsLine(const uint8_t* buff, XsSize offset) const override;
+	uint8_t syncLine(const XsSyncSetting& setting) const override;
 
-	/*! \brief Sets the validity
-		\param validity : The validity
-	*/
-	void setValid(bool validity) {m_valid = validity;}
+	bool hasIccSupport() const override;
 
-	/*! \returns The value object
-	*/
-	operator T() const {return m_value;}
-
-	/*! \brief Output stream operator that adds a value to the stream
-		\param out The output stream
-		\param val The value
-		\returns The reference to the output stream
-	*/
-	friend std::ostream& operator << (std::ostream& out, Value const & val) {if (val.valid()) {out << val.value();} return out;}
-
-private:
-	T m_value;
-	bool m_valid;
+	MtiBaseDevice::BaseFrequencyResult getBaseFrequencyInternal(XsDataIdentifier dataType = XDI_None) const override;
 };
 
-typedef Value<double> DoubleValue;
-typedef Value<bool> BoolValue;
+#ifndef XDA_PRIVATE_BUILD
+/*! \class Mti6X0DeviceEx
+	\brief The internal base class for MTi-6X0 series devices
+*/
+struct Mti6X0DeviceEx : public Mti6X0Device
+{
+	//! \copybrief Mti6X0Device::Mti6X0Device
+	explicit Mti6X0DeviceEx(Communicator* comm) : Mti6X0Device(comm) {};
 
-}
+	//! \copybrief Mti6X0Device::Mti6X0Device
+	explicit Mti6X0DeviceEx(MtContainer *master) : Mti6X0Device(master) {};
+};
+#else
+#include "mtix00deviceex.h"
+#endif
 
-#endif	// file guard
+#endif

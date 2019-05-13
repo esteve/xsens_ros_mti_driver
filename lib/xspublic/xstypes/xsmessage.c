@@ -156,8 +156,7 @@ union Itypes {
 typedef union Itypes Itypes;
 
 /*! \brief Calculate the sum of the values in the buffer
-  \details
-	This function calculates the sum of the byte values for the first \a count bytes in the \a buffer
+	\details This function calculates the sum of the byte values for the first \a count bytes in the \a buffer
 	\param buffer An array of (unsigned) bytes
 	\param count The number of bytes in the buffer
 	\returns The unsigned sum of the byte values in the buffer modulo 256
@@ -237,7 +236,7 @@ static inline void swapEndian(void *data, const XsSize size)
 /*! \brief Get data of size \a size at \a offset, and put it byteswapped into \a value */
 void XsMessage_getEndianCorrectData(XsMessage const* thisPtr, void *value, XsSize size, XsSize offset)
 {
-	memcpy(value, XsMessage_cdataAtOffset(thisPtr, offset), size);
+	memcpy(value, (void const*) XsMessage_cdataAtOffset(thisPtr, offset), size);
 	swapEndian(value, size);
 }
 
@@ -254,7 +253,7 @@ void XsMessage_setEndianCorrectData(XsMessage *thisPtr, void const *value, XsSiz
 
 /*! \brief This function initializes the %XsMessage object and reserves \a dataSize bytes for data
 
-  \param[in] dataSize the expected size of the message payload
+	\param[in] dataSize the expected size of the message payload
 */
 void XsMessage_constructSized(XsMessage* thisPtr, XsSize dataSize)
 {
@@ -277,7 +276,7 @@ void XsMessage_constructSized(XsMessage* thisPtr, XsSize dataSize)
 	{
 		hdr->m_length = (uint8_t) dataSize;
 		*((uint8_t**) &thisPtr->m_checksum) = &hdr->m_datlen.m_data[dataSize];
-		thisPtr->m_checksum[0] = -(uint8_t)dataSize;
+		thisPtr->m_checksum[0] = (uint8_t)-(int8_t)(uint8_t)dataSize;
 	}
 	else
 	{
@@ -285,7 +284,7 @@ void XsMessage_constructSized(XsMessage* thisPtr, XsSize dataSize)
 		hdr->m_datlen.m_extended.m_length.m_high = (uint8_t) (dataSize >> 8);
 		hdr->m_datlen.m_extended.m_length.m_low = (uint8_t) dataSize;
 		*((uint8_t**) &thisPtr->m_checksum) = &hdr->m_datlen.m_extended.m_data[dataSize];
-		thisPtr->m_checksum[0] = -(hdr->m_datlen.m_extended.m_length.m_high + hdr->m_datlen.m_extended.m_length.m_low + XS_EXTLENCODE);
+		thisPtr->m_checksum[0] = (uint8_t) -(hdr->m_datlen.m_extended.m_length.m_high + hdr->m_datlen.m_extended.m_length.m_low + XS_EXTLENCODE);
 	}
 	thisPtr->m_checksum[0] -= hdr->m_busId;
 }
@@ -328,8 +327,9 @@ void XsMessage_assign(XsMessage* thisPtr, XsSize dataSize)
 }
 
 /*! \brief This function initializes the %XsMessage object and reserves \a msgSize bytes for data, it then copies in the data from \a src
-  \param msgSize the size of the data pointed to by src
-  \param src the data to load the message from
+	\param msgSize the size of the data pointed to by src
+	\param src the data to load the message from
+	\note This is a constructor! Previous contents will be overwritten without first freeing them!
 */
 void XsMessage_load(XsMessage* thisPtr, XsSize msgSize, unsigned char const* src)
 {
@@ -347,7 +347,7 @@ void XsMessage_destruct(XsMessage* thisPtr)
 }
 
 /*! \brief This function copies from \a thisPtr to \a copy
-  \param copy the object to copy to
+	\param copy the object to copy to
 */
 void XsMessage_copy(XsMessage* copy, XsMessage const* thisPtr)
 {
@@ -357,7 +357,7 @@ void XsMessage_copy(XsMessage* copy, XsMessage const* thisPtr)
 }
 
 /*! \brief This function returns the datasize of the message in \a thisptr
-  \returns the size of the message payload
+	\returns the size of the message payload
 */
 XsSize XsMessage_dataSize(XsMessage const* thisPtr)
 {
@@ -375,9 +375,9 @@ XsSize XsMessage_dataSize(XsMessage const* thisPtr)
 
 /*! \brief This function returns a const pointer to the \a offset in the data of the message in \a thisptr
 
-  \param offset the offset of the data to be returned
+	\param offset the offset of the data to be returned
 
-  \returns a pointer to the data at offset \a offset
+	\returns a pointer to the data at offset \a offset
 */
 const uint8_t* XsMessage_constData(XsMessage const* thisPtr, XsSize offset)
 {
@@ -389,7 +389,7 @@ const uint8_t* XsMessage_constData(XsMessage const* thisPtr, XsSize offset)
 /*! \brief This function returns a const pointer to the header of the message in \a thisptr
 
 
-  \returns a pointer to the start of the message
+	\returns a pointer to the start of the message
 */
 const uint8_t* XsMessage_getMessageStart(XsMessage const* thisPtr)
 {
@@ -402,7 +402,7 @@ const uint8_t* XsMessage_getMessageStart(XsMessage const* thisPtr)
 	is in effect the number of bytes that would be transferred if the message were to
 	be sent over a communications channel.
 
-  \returns the total message size
+	\returns the total message size
 */
 XsSize XsMessage_getTotalMessageSize(XsMessage const* thisPtr)
 {
@@ -420,9 +420,9 @@ XsSize XsMessage_getTotalMessageSize(XsMessage const* thisPtr)
 
 /*! \brief Returns the byte value at \a offset in the data of the message
 
-  \param offset the offset in the payload at which to read data
+	\param offset the offset in the payload at which to read data
 
-  \returns the byte at offset \a offset in the message payload
+	\returns the byte at offset \a offset in the message payload
 */
 uint8_t XsMessage_getDataByte(XsMessage const* thisPtr, XsSize offset)
 {
@@ -431,9 +431,9 @@ uint8_t XsMessage_getDataByte(XsMessage const* thisPtr, XsSize offset)
 
 /*! \brief Returns the short value at \a offset in the data of the message
 
-  \param offset the offset in the payload at which to read data
+	\param offset the offset in the payload at which to read data
 
-  \returns the 16-bit integer value at offset \a offset in the message payload
+	\returns the 16-bit integer value at offset \a offset in the message payload
 */
 uint16_t XsMessage_getDataShort(XsMessage const* thisPtr, XsSize offset)
 {
@@ -444,9 +444,9 @@ uint16_t XsMessage_getDataShort(XsMessage const* thisPtr, XsSize offset)
 
 /*! \brief Returns the long value at \a offset in the data of the message
 
-  \param offset the offset in the payload at which to read data
+	\param offset the offset in the payload at which to read data
 
-  \returns the 32-bit integer value at offset \a offset in the message payload
+	\returns the 32-bit integer value at offset \a offset in the message payload
 */
 uint32_t XsMessage_getDataLong(XsMessage const* thisPtr, XsSize offset)
 {
@@ -457,9 +457,9 @@ uint32_t XsMessage_getDataLong(XsMessage const* thisPtr, XsSize offset)
 
 /*! \brief Returns the long value at \a offset in the data of the message
 
-  \param offset the offset in the payload at which to read data
+	\param offset the offset in the payload at which to read data
 
-  \returns the 64-bit integer value at offset \a offset in the message payload
+	\returns the 64-bit integer value at offset \a offset in the message payload
 */
 uint64_t XsMessage_getDataLongLong(XsMessage const* thisPtr, XsSize offset)
 {
@@ -470,9 +470,9 @@ uint64_t XsMessage_getDataLongLong(XsMessage const* thisPtr, XsSize offset)
 
 /*! \brief Returns the float value at \a offset in the data of the message
 
-  \param offset the offset in the payload at which to read data
+	\param offset the offset in the payload at which to read data
 
-  \returns the single precision float value at offset \a offset in the message payload
+	\returns the single precision float value at offset \a offset in the message payload
 */
 float XsMessage_getDataFloat(XsMessage const* thisPtr, XsSize offset)
 {
@@ -482,9 +482,9 @@ float XsMessage_getDataFloat(XsMessage const* thisPtr, XsSize offset)
 }
 
 /*! \brief Returns the double at \a offset in the data of the message
-  \param offset the offset in the payload at which to read data
+	\param offset the offset in the payload at which to read data
 
-  \returns the double precision floating point value at offset \a offset in the message payload
+	\returns the double precision floating point value at offset \a offset in the message payload
 */
 double XsMessage_getDataDouble(XsMessage const* thisPtr, XsSize offset)
 {
@@ -494,9 +494,9 @@ double XsMessage_getDataDouble(XsMessage const* thisPtr, XsSize offset)
 }
 
 /*! \brief Returns the F12.20 value at \a offset in the data of the message
-  \param offset the offset in the payload at which to read data
+	\param offset the offset in the payload at which to read data
 
-  \returns the 12.20 fixed point value at offset \a offset in the message payload
+	\returns the 12.20 fixed point value at offset \a offset in the message payload
 */
 double XsMessage_getDataF1220(XsMessage const* thisPtr, XsSize offset)
 {
@@ -510,9 +510,9 @@ double XsMessage_getDataF1220(XsMessage const* thisPtr, XsSize offset)
 }
 
 /*! \brief Returns the F16.32 value at \a offset in the data of the message
-  \param offset the offset in the payload at which to read data
+	\param offset the offset in the payload at which to read data
 
-  \returns the 16.32 fixed point value at offset \a offset in the message payload
+	\returns the 16.32 fixed point value at offset \a offset in the message payload
 */
 double XsMessage_getDataFP1632(XsMessage const* thisPtr, XsSize offset)
 {
@@ -533,10 +533,10 @@ double XsMessage_getDataFP1632(XsMessage const* thisPtr, XsSize offset)
 
 /*! \brief Returns a const pointer to the data buffer of the message
 
-  \param offset the offset in the payload at which to read data
+	\param offset the offset in the payload at which to read data
 
 
-  \returns a const pointer to the data buffer of the message
+	\returns a const pointer to the data buffer of the message
 */
 const uint8_t* XsMessage_getDataBuffer(XsMessage const* thisPtr, XsSize offset)
 {
@@ -545,8 +545,8 @@ const uint8_t* XsMessage_getDataBuffer(XsMessage const* thisPtr, XsSize offset)
 
 /*! \brief Set the byte at \a offset in the message to \a value
 
-  \param value the 8-bit value to set
-  \param offset the offset in the message payload at which to write the data
+	\param value the 8-bit value to set
+	\param offset the offset in the message payload at which to write the data
 */
 void XsMessage_setDataByte(XsMessage* thisPtr, uint8_t value, XsSize offset)
 {
@@ -555,8 +555,8 @@ void XsMessage_setDataByte(XsMessage* thisPtr, uint8_t value, XsSize offset)
 
 /*! \brief Sets the short at \a offset in the message to \a value
 
-  \param value the 16-bit value to set
-  \param offset the offset in the message payload at which to write the data
+	\param value the 16-bit value to set
+	\param offset the offset in the message payload at which to write the data
 */
 void XsMessage_setDataShort(XsMessage* thisPtr, uint16_t value, XsSize offset)
 {
@@ -565,8 +565,8 @@ void XsMessage_setDataShort(XsMessage* thisPtr, uint16_t value, XsSize offset)
 
 /*! \brief Sets the long at \a offset in the message to \a value
 
-  \param value the 32-bit value to set
-  \param offset the offset in the message payload at which to write the data
+	\param value the 32-bit value to set
+	\param offset the offset in the message payload at which to write the data
 */
 void XsMessage_setDataLong(XsMessage* thisPtr, uint32_t value, XsSize offset)
 {
@@ -575,8 +575,8 @@ void XsMessage_setDataLong(XsMessage* thisPtr, uint32_t value, XsSize offset)
 
 /*! \brief Sets the long at \a offset in the message to \a value
 
-  \param value the 64-bit value to set
-  \param offset the offset in the message payload at which to write the data
+	\param value the 64-bit value to set
+	\param offset the offset in the message payload at which to write the data
 */
 void XsMessage_setDataLongLong(XsMessage* thisPtr, uint64_t value, XsSize offset)
 {
@@ -586,8 +586,8 @@ void XsMessage_setDataLongLong(XsMessage* thisPtr, uint64_t value, XsSize offset
 
 /*! \brief Sets the float at \a offset in the message to \a value
 
-  \param value the single precision floating point value to set
-  \param offset the offset in the message payload at which to write the data
+	\param value the single precision floating point value to set
+	\param offset the offset in the message payload at which to write the data
 */
 void XsMessage_setDataFloat(XsMessage* thisPtr, float value, XsSize offset)
 {
@@ -596,8 +596,8 @@ void XsMessage_setDataFloat(XsMessage* thisPtr, float value, XsSize offset)
 
 /*! \brief Sets the double at \a offset in the message to \a value
 
-  \param value the double precision floating point value to set
-  \param offset the offset in the message payload at which to write the data
+	\param value the double precision floating point value to set
+	\param offset the offset in the message payload at which to write the data
 */
 void XsMessage_setDataDouble(XsMessage* thisPtr, double value, XsSize offset)
 {
@@ -606,8 +606,8 @@ void XsMessage_setDataDouble(XsMessage* thisPtr, double value, XsSize offset)
 
 /*! \brief Sets the F12.20 at \a offset in the message to \a value
 
-  \param value the 12.20 fixed point value to set
-  \param offset the offset in the message payload at which to write the data
+	\param value the 12.20 fixed point value to set
+	\param offset the offset in the message payload at which to write the data
 */
 void XsMessage_setDataF1220(XsMessage* thisPtr, double value, XsSize offset)
 {
@@ -622,8 +622,8 @@ void XsMessage_setDataF1220(XsMessage* thisPtr, double value, XsSize offset)
 
 /*! \brief Sets the F16.32 at \a offset in the message to \a value
 
-  \param value the 16.32 fixed point value to set
-  \param offset the offset in the message payload at which to write the data
+	\param value the 16.32 fixed point value to set
+	\param offset the offset in the message payload at which to write the data
 */
 void XsMessage_setDataFP1632(XsMessage* thisPtr, double value, XsSize offset)
 {
@@ -664,7 +664,7 @@ void XsMessage_setDataFP1632(XsMessage* thisPtr, double value, XsSize offset)
 	}
 
 	XsMessage_setDataLong(thisPtr, (fpfrac & ~1L) | b, offset);
-	XsMessage_setDataShort(thisPtr, fpint, offset+4);
+	XsMessage_setDataShort(thisPtr, (uint16_t) fpint, offset+(XsSize)4);
 }
 
 /*! \brief Puts \a size number of bytes from \a buffer into the message at \a offset
@@ -744,7 +744,8 @@ static float convertToFloat(double d)
 void XsMessage_getDataFPValuesById(XsMessage const* thisPtr, XsDataIdentifier dataIdentifier, double *dest, XsSize offset, XsSize numValues)
 {
 	XsSize i;
-	for (i=0; i<numValues; i++) {
+	for (i=0; i<numValues; i++)
+	{
 		switch (dataIdentifier & XDI_SubFormatMask)
 		{
 		case XDI_SubFormatFloat:
@@ -765,6 +766,11 @@ void XsMessage_getDataFPValuesById(XsMessage const* thisPtr, XsDataIdentifier da
 		case XDI_SubFormatFp1220:
 			*dest++ = XsMessage_getDataF1220(thisPtr, offset);
 			offset += 4;
+			break;
+
+		default:
+			*dest++ = 0;
+			break;
 		}
 	}
 }
@@ -779,7 +785,8 @@ void XsMessage_getDataFPValuesById(XsMessage const* thisPtr, XsDataIdentifier da
 void XsMessage_setDataFPValuesById(XsMessage* thisPtr, XsDataIdentifier dataIdentifier, double const*data, XsSize offset, XsSize numValues)
 {
 	XsSize i;
-	for (i=0; i<numValues; i++) {
+	for (i=0; i<numValues; i++)
+	{
 		switch (dataIdentifier & XDI_SubFormatMask)
 		{
 		case XDI_SubFormatFloat:
@@ -800,6 +807,10 @@ void XsMessage_setDataFPValuesById(XsMessage* thisPtr, XsDataIdentifier dataIden
 		case XDI_SubFormatFp1220:
 			XsMessage_setDataF1220(thisPtr, data[i], offset);
 			offset += 4;
+			break;
+
+		default:
+			break;
 		}
 	}
 }
@@ -816,7 +827,8 @@ void XsMessage_setDataFPValuesById(XsMessage* thisPtr, XsDataIdentifier dataIden
 void XsMessage_getDataRealValuesById(XsMessage const* thisPtr, XsDataIdentifier dataIdentifier, XsReal *dest, XsSize offset, XsSize numValues)
 {
 	XsSize i;
-	for (i=0; i<numValues; i++) {
+	for (i=0; i<numValues; i++)
+	{
 		switch (dataIdentifier & XDI_SubFormatMask)
 		{
 		case XDI_SubFormatFloat:
@@ -853,6 +865,11 @@ void XsMessage_getDataRealValuesById(XsMessage const* thisPtr, XsDataIdentifier 
 			*dest++ = XsMessage_getDataF1220(thisPtr, offset);
 #endif
 			offset += 4;
+			break;
+
+		default:
+			*dest++ = 0;
+			break;
 		}
 	}
 }
@@ -867,7 +884,8 @@ void XsMessage_getDataRealValuesById(XsMessage const* thisPtr, XsDataIdentifier 
 void XsMessage_setDataRealValuesById(XsMessage* thisPtr, XsDataIdentifier dataIdentifier, XsReal const*data, XsSize offset, XsSize numValues)
 {
 	XsSize i;
-	for (i=0; i<numValues; i++) {
+	for (i=0; i<numValues; i++)
+	{
 		switch (dataIdentifier & XDI_SubFormatMask)
 		{
 		case XDI_SubFormatFloat:
@@ -888,6 +906,10 @@ void XsMessage_setDataRealValuesById(XsMessage* thisPtr, XsDataIdentifier dataId
 		case XDI_SubFormatFp1220:
 			XsMessage_setDataF1220(thisPtr, data[i], offset);
 			offset += 4;
+			break;
+
+		default:
+			break;
 		}
 	}
 }
@@ -914,9 +936,7 @@ void XsMessage_recomputeChecksum(XsMessage* thisPtr)
 }
 
 /*! \brief Returns non-zero if the checksum inside the message is correct for the message, zero otherwise
-
-
-  \returns true (non-zero) if the checksum inside the message is correct, false (zero) otherwise
+	\returns true (non-zero) if the checksum inside the message is correct, false (zero) otherwise
 */
 int XsMessage_isChecksumOk(XsMessage const* thisPtr)
 {
@@ -937,10 +957,7 @@ const XsMessageHeader* XsMessage_getConstHeader(XsMessage const* thisPtr)
 }
 
 /*! \brief Test if this message is empty
-
-
-
-  \returns non-zero if this message is empty, zero otherwise
+	\returns non-zero if this message is empty, zero otherwise
 */
 int XsMessage_empty(XsMessage const* thisPtr)
 {
@@ -952,7 +969,7 @@ int XsMessage_empty(XsMessage const* thisPtr)
 
 /*! \brief Resize the buffer of message to \a newSize bytes
 
-  \param newSize the new size of the message payload buffer
+	\param newSize the new size of the message payload buffer
 */
 void XsMessage_resizeData(XsMessage* thisPtr, XsSize newSize)
 {
@@ -1006,9 +1023,9 @@ void XsMessage_resizeData(XsMessage* thisPtr, XsSize newSize)
 
 /*! \brief Set the bus id for this message to \a busId
 
-  \param busId the bus identifier
+	\param busId the bus identifier
 
-  \sa XS_BID_BROADCAST XS_BID_MASTER XS_BID_MT
+	\sa XS_BID_BROADCAST XS_BID_MASTER XS_BID_MT
 */
 void XsMessage_setBusId(XsMessage* thisPtr, uint8_t busId)
 {
@@ -1026,7 +1043,7 @@ void XsMessage_setBusId(XsMessage* thisPtr, uint8_t busId)
 
 /*! \brief Set the message id for this message to \a msgId
 
-  \param msgId the message identifier
+	\param msgId the message identifier
 */
 void XsMessage_setMessageId(XsMessage* thisPtr, enum XsXbusMessageId msgId)
 {
@@ -1044,8 +1061,8 @@ void XsMessage_setMessageId(XsMessage* thisPtr, enum XsXbusMessageId msgId)
 
 /*! \brief Create \a count bytes of empty space at \a offset in this message
 
-  \param count the number of bytes to reserve
-  \param offset the offset at which to allocate the space
+	\param count the number of bytes to reserve
+	\param offset the offset at which to allocate the space
 */
 void XsMessage_insertData(XsMessage* thisPtr, XsSize count, XsSize offset)
 {
@@ -1108,8 +1125,8 @@ void XsMessage_insertData(XsMessage* thisPtr, XsSize count, XsSize offset)
 
 /*! \brief Remove \a count bytes of data from the message at \a offset
 
-  \param count the number of bytes to remove
-  \param offset the offset at which to remove the bytes
+	\param count the number of bytes to remove
+	\param offset the offset at which to remove the bytes
 */
 void XsMessage_deleteData(XsMessage* thisPtr, XsSize count, XsSize offset)
 {
@@ -1209,8 +1226,8 @@ void XsMessage_toHexString(XsMessage const* thisPtr, XsSize maxBytes, XsString* 
 		XsString_resize(resultValue, maxBytes*3-1);
 		s = (char*) resultValue->m_data;
 		for (i = 0; i < maxBytes-1; ++i)
-			sprintf(s+(i*3), "%02X ", (int) ((uint8_t const*) thisPtr->m_message.m_data)[i]);
-		sprintf(s+((maxBytes-1)*3), "%02X", (int) ((uint8_t const*) thisPtr->m_message.m_data)[maxBytes-1]);
+			sprintf(s+(i*3), "%02X ", (unsigned int) ((uint8_t const*) thisPtr->m_message.m_data)[i]);
+		sprintf(s+((maxBytes-1)*3), "%02X", (unsigned int) ((uint8_t const*) thisPtr->m_message.m_data)[maxBytes-1]);
 	}
 	else
 		XsString_resize(resultValue, 0);

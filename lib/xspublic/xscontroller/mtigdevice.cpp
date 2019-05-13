@@ -31,6 +31,8 @@
 //  
 
 #include "mtigdevice.h"
+#include <xstypes/xsstringoutputtypearray.h>
+#include <xstypes/xsstatusflag.h>
 
 #define MTMK4_700_LEGACY_FW_VERSION_MAJOR		1
 #define MTMK4_700_LEGACY_FW_VERSION_MINOR		3
@@ -46,20 +48,18 @@ void MtigDevice::construct()
 
 /*! \brief Constructs a device
 	\param comm The communicator to construct with
-	\param hwParams The hardware parameters for MTi-7X0 series to construct with
 */
-MtigDevice::MtigDevice(Communicator* comm, MtMk4_700HardwareParams* hwParams)
-	: MtiBaseDeviceEx(comm, (MtHardwareParams*)hwParams)
+MtigDevice::MtigDevice(Communicator* comm)
+	: MtiBaseDeviceEx(comm)
 {
 	construct();
 }
 
 /*! \brief An empty constructor
 	\param master The master device
-	\param hwParams The hardware parameters for MTi-7X0 series to construct with
 */
-MtigDevice::MtigDevice(MtContainer *master, MtMk4_700HardwareParams* hwParams)
-	: MtiBaseDeviceEx(master, (MtHardwareParams*)hwParams)
+MtigDevice::MtigDevice(MtContainer *master)
+	: MtiBaseDeviceEx(master)
 {
 	construct();
 }
@@ -68,6 +68,28 @@ MtigDevice::MtigDevice(MtContainer *master, MtMk4_700HardwareParams* hwParams)
 */
 MtigDevice::~MtigDevice()
 {
+}
+
+XsStringOutputTypeArray MtigDevice::supportedStringOutputTypes() const
+{
+	XsStringOutputTypeArray outputs;
+	outputs.push_back(XSOT_HCHDM);
+	outputs.push_back(XSOT_HCHDG);
+	outputs.push_back(XSOT_TSS2);
+	outputs.push_back(XSOT_PHTRO);
+	outputs.push_back(XSOT_PRDID);
+	outputs.push_back(XSOT_EM1000);
+	outputs.push_back(XSOT_PSONCMS);
+	outputs.push_back(XSOT_HCMTW);
+	outputs.push_back(XSOT_HEHDT);
+	outputs.push_back(XSOT_HEROT);
+	outputs.push_back(XSOT_GPGGA);
+	outputs.push_back(XSOT_PTCF);
+	outputs.push_back(XSOT_XSVEL);
+	outputs.push_back(XSOT_GPZDA);
+	outputs.push_back(XSOT_GPRMC);
+
+	return outputs;
 }
 
 /*! \brief Returns the base update rate (hz) corresponding to the dataType
@@ -120,4 +142,32 @@ MtiBaseDevice::BaseFrequencyResult MtigDevice::getBaseFrequencyInternal(XsDataId
 		result.m_divedable = false;
 
 	return result;
+}
+
+uint32_t MtigDevice::supportedStatusFlags() const
+{
+	return (uint32_t) (0
+		//|XSF_SelfTestOk
+		|XSF_OrientationValid
+		|XSF_GpsValid
+		|XSF_NoRotationMask
+		|XSF_RepresentativeMotion
+		|XSF_ExternalClockSynced
+		|XSF_ClipAccX
+		|XSF_ClipAccY
+		|XSF_ClipAccZ
+		|XSF_ClipGyrX
+		|XSF_ClipGyrY
+		|XSF_ClipGyrZ
+		|XSF_ClipMagX
+		|XSF_ClipMagY
+		|XSF_ClipMagZ
+		//|XSF_Retransmitted
+		|XSF_ClippingDetected
+		//|XSF_Interpolated
+		|XSF_SyncIn
+		|XSF_SyncOut
+		|XSF_FilterMode
+		|XSF_HaveGnssTimePulse
+		);
 }

@@ -104,6 +104,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		if (lpvReserved == NULL)
 			so_fini();
 		break;
+	default:
+		break;
 	}
 	return TRUE;
 }

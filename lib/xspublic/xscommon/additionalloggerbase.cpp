@@ -56,8 +56,10 @@ JournalLogLevel AdditionalLoggerBase::debugLevel() const
 
 /*! \copydoc AbstractAdditionalLogger::setLogLevel
 */
-void AdditionalLoggerBase::setLogLevel(JournalLogLevel level) {
-	if (level != m_level) {
+void AdditionalLoggerBase::setLogLevel(JournalLogLevel level)
+{
+	if (level != m_level)
+	{
 		JournalLogLevel oldLevel = m_level;
 		m_level = level;
 		onLogLevelChanged(m_level, oldLevel);
@@ -66,8 +68,10 @@ void AdditionalLoggerBase::setLogLevel(JournalLogLevel level) {
 
 /*! \copydoc AbstractAdditionalLogger::setDebugLevel
 */
-void AdditionalLoggerBase::setDebugLevel(JournalLogLevel level) {
-	if (level != m_debugLevel) {
+void AdditionalLoggerBase::setDebugLevel(JournalLogLevel level)
+{
+	if (level != m_debugLevel)
+	{
 		JournalLogLevel oldLevel = m_debugLevel;
 		m_debugLevel = level;
 		onDebugLevelChanged(m_debugLevel, oldLevel);

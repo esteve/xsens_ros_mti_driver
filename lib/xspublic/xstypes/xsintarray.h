@@ -67,7 +67,7 @@ struct XsIntArray : public XsArrayImpl<int, g_xsIntArrayDescriptor, XsIntArray> 
 	}
 
 	//! \brief Constructs an XsIntArray that references the data supplied in \a ref
-	inline explicit XsIntArray(int* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsIntArray(int* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: ArrayImpl(ref, sz, flags)
 	{
 	}

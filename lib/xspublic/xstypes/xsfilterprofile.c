@@ -30,26 +30,39 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#define XSNOEXPORT
-#define XSENS_NO_AUTOLIB
-// include this file in Visual Studio using C/C++->Advanced->Force Includes (the /FI option)
-#ifndef CONFIG_H
-#define CONFIG_H
+#include "xsfilterprofile.h"
+#include "xsstring.h"
+#include <stdio.h>
 
-#ifndef UNICODE
-#define UNICODE
-#endif
-#ifndef _UNICODE
-#define _UNICODE
-#endif
+/*! \class XsFilterProfile
+	\brief Contains information about an available filter profile
+*/
+/*! \addtogroup cinterface C Interface
+	@{
+*/
 
-#include <xstypes/xstypesconfig.h>
+/*! \brief Converts filter profile version and type information to string */
+void XsFilterProfile_toString(XsFilterProfile const* thisPtr, XsString *out)
+{
+	char outData[3+1+3+1+XS_LEN_FILTERPROFILELABEL_TERM];
+	sprintf(outData, "%d.%d %s", thisPtr->m_type, thisPtr->m_version, thisPtr->m_label);
+	XsString_assignCharArray(out, outData);
+}
 
-//////////////////////////////////////////////////
-// generic preprocessor defines
+/*! \brief Checks if the filter profile is empty */
+int XsFilterProfile_empty(XsFilterProfile const* thisPtr)
+{
+	return (thisPtr->m_type == 0);
+}
 
-//! Set to 0 to disable threading support (ie for in an embedded environment), 1 is enabled
-#define JOURNALLER_WITH_THREAD_SUPPORT		1
+/*! \brief Swap the contents of \a a with \a b
+*/
+void XsFilterProfile_swap(XsFilterProfile* a, XsFilterProfile* b)
+{
+	XsFilterProfile tmp;
+	memcpy(&tmp, a, sizeof(XsFilterProfile));
+	memcpy(a, b, sizeof(XsFilterProfile));
+	memcpy(b, &tmp, sizeof(XsFilterProfile));
+}
 
-
-#endif	// CONFIG_H
+/*! @} */

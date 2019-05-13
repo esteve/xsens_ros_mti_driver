@@ -128,21 +128,20 @@ struct XsSocket
 		\param[in] protocol the protocol on top of IP to use
 		\param[in] ipVersion the ip address family to use
 	*/
-	inline explicit XsSocket(IpProtocol protocol, NetworkLayerProtocol ipVersion = NLP_IPVX) :
-		d(NULL)
+	inline explicit XsSocket(IpProtocol protocol, NetworkLayerProtocol ipVersion = NLP_IPVX)
+		: d(NULL)
 	{
 		(void)d;
 		XsSocket_create(this, ipVersion, protocol);
 	}
 
-	/*!
-	 * \brief \copybrief XsSocket_createFromFileDescriptor
-	 *
-	 * \param[in] sockfd the file descriptor of the socket to wrap
-	 * \param[in] flags if set to XSDF_Managed the wrapped socket will be closed when object is destroyed
-	 */
-	inline explicit XsSocket(int sockfd, XsDataFlags flags = XSDF_None) :
-		d(NULL)
+	/*! \brief \copybrief XsSocket_createFromFileDescriptor
+
+		\param[in] sockfd the file descriptor of the socket to wrap
+		\param[in] flags if set to XSDF_Managed the wrapped socket will be closed when object is destroyed
+	*/
+	inline explicit XsSocket(int sockfd, XsDataFlags flags = XSDF_None)
+		: d(NULL)
 	{
 		(void)d;
 		XsSocket_createFromFileDescriptor(this, sockfd, flags);
@@ -295,13 +294,12 @@ struct XsSocket
 		XsSocket_flush(this);
 	}
 
-	/*!
-	 * \brief \copybrief XsSocket_select
-	 * \param[in] mstimeout timeout to wait for socket to be readable/writeable
-	 * \param[in,out] canRead if not null then will be set to non-zero to indicate that the socket has data to read.
-	 * \param[in,out] canWrite if not null then will be set to non-zero to indicate that the socket can be written to.
-	 * \returns -1 on error, 0 on timeout, or a positive number otherwise
-	 */
+	/*! \brief \copybrief XsSocket_select
+		\param[in] mstimeout timeout to wait for socket to be readable/writeable
+		\param[in,out] canRead if not null then will be set to non-zero to indicate that the socket has data to read.
+		\param[in,out] canWrite if not null then will be set to non-zero to indicate that the socket can be written to.
+		\returns -1 on error, 0 on timeout, or a positive number otherwise
+	*/
 	int select(int mstimeout, int *canRead, int *canWrite)
 	{
 		return XsSocket_select(this, mstimeout, canRead, canWrite);
@@ -330,29 +328,29 @@ struct XsSocket
 	}
 
 	/*! \brief De-allocate the socket */
-	inline void operator delete(void* p) throw()
+	inline void operator delete(void* p) noexcept
 	{
 		XsSocket_free(reinterpret_cast<XsSocket*>(p));
 	}
 
 	/*! \brief \copybrief XsSocket_setSocketOption
-	 *	\param[in] option The socket option to change
-	 *	\param[in] valuePtr Points to the new value of the socket option
-	 *	\param[in] valueSize The size of the value \a valuePtr points to
-	 *	\returns XRV_OK on success, another XsResultValue otherwise
-	 *	\see XsSocket_setSocketOption
-	 */
+		\param[in] option The socket option to change
+		\param[in] valuePtr Points to the new value of the socket option
+		\param[in] valueSize The size of the value \a valuePtr points to
+		\returns XRV_OK on success, another XsResultValue otherwise
+		\see XsSocket_setSocketOption
+	*/
 	XsResultValue setSocketOption(XsSocketOption option, void* valuePtr, int valueSize)
 	{
 		return XsSocket_setSocketOption(this, option, valuePtr, valueSize);
 	}
 
 	/*! \brief Sets an socket option of int type
-	 *	\param[in] option The socket option to change
-	 *	\param[in] value The new value of the socket option
-	 *	\returns XRV_OK on success, another XsResultValue otherwise
-	 *	\see XsSocket_setSocketOption
-	 */
+		\param[in] option The socket option to change
+		\param[in] value The new value of the socket option
+		\returns XRV_OK on success, another XsResultValue otherwise
+		\see XsSocket_setSocketOption
+	*/
 	XsResultValue setSocketOption(XsSocketOption option, int value)
 	{
 		return XsSocket_setSocketOption(this, option, (void*)&value, sizeof(int));
@@ -422,12 +420,11 @@ struct XsSocket
 		return XsSocket_isUsable(this) != 0;
 	}
 
-	/*!
-	 * \brief Get the IP address of the remote host this socket is connected to.
-	 * \returns the remote host IP address
-	 *
-	 * Only works for connected TCP sockets
-	 */
+	/*! \brief Get the IP address of the remote host this socket is connected to.
+
+		Only works for connected TCP sockets
+		\returns the remote host IP address
+	*/
 	XsString getRemoteAddress() const
 	{
 		XsString address;

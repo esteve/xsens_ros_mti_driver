@@ -31,13 +31,14 @@
 //  
 
 #include "mti7device.h"
+#include <xstypes/xsstatusflag.h>
 
 void Mti7Device::construct()
 {
 }
 
-Mti7Device::Mti7Device(Communicator* comm, MtMk4_700HardwareParams* hwParams) :
-	MtiBaseDeviceEx(comm, (MtHardwareParams*)hwParams)
+Mti7Device::Mti7Device(Communicator* comm)
+	: MtiBaseDeviceEx(comm)
 {
 	construct();
 
@@ -45,8 +46,8 @@ Mti7Device::Mti7Device(Communicator* comm, MtMk4_700HardwareParams* hwParams) :
 		comm->setDefaultTimeout(1000); //Increase the default timeout for MTi-1 devices because a settings write can occasionally take ~900ms
 }
 
-Mti7Device::Mti7Device(MtContainer *masterdevice, MtMk4_700HardwareParams* hwParams) :
-	MtiBaseDeviceEx(masterdevice, (MtHardwareParams*)hwParams)
+Mti7Device::Mti7Device(MtContainer *masterdevice)
+	: MtiBaseDeviceEx(masterdevice)
 {
 	construct();
 }
@@ -63,6 +64,9 @@ MtiBaseDevice::BaseFrequencyResult Mti7Device::getBaseFrequencyInternal(XsDataId
 	BaseFrequencyResult result;
 	result.m_frequency = 0;
 	result.m_divedable = true;
+
+	if ((dataType & XDI_FullTypeMask) == XDI_LocationId || (dataType & XDI_FullTypeMask) == XDI_DeviceId)
+		return result;
 
 	if ((dataType & XDI_FullTypeMask) == XDI_AccelerationHR || (dataType & XDI_FullTypeMask) == XDI_RateOfTurnHR)
 	{
@@ -103,4 +107,37 @@ MtiBaseDevice::BaseFrequencyResult Mti7Device::getBaseFrequencyInternal(XsDataId
 		result.m_divedable = false;
 
 	return result;
+}
+
+bool Mti7Device::hasIccSupport() const
+{
+	return true;
+}
+
+uint32_t Mti7Device::supportedStatusFlags() const
+{
+	return (uint32_t) (0
+		//|XSF_SelfTestOk
+		|XSF_OrientationValid
+		|XSF_GpsValid
+		|XSF_NoRotationMask
+		|XSF_RepresentativeMotion
+		|XSF_ExternalClockSynced
+		|XSF_ClipAccX
+		|XSF_ClipAccY
+		|XSF_ClipAccZ
+		|XSF_ClipGyrX
+		|XSF_ClipGyrY
+		|XSF_ClipGyrZ
+		|XSF_ClipMagX
+		|XSF_ClipMagY
+		|XSF_ClipMagZ
+		//|XSF_Retransmitted
+		|XSF_ClippingDetected
+		//|XSF_Interpolated
+		//|XSF_SyncIn
+		//|XSF_SyncOut
+		|XSF_FilterMode
+		|XSF_HaveGnssTimePulse
+		);
 }

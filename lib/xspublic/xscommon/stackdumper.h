@@ -34,6 +34,6 @@
 #define STACKDUMPER_H
 
 #include <string>
-std::string getStackDump();
+std::string getStackDump(bool includeModules);
 
 #endif

@@ -37,6 +37,7 @@
 #include "communicator.h"
 #include "scenariomatchpred.h"
 #include <xstypes/xsstatusflag.h>
+#include <xstypes/xsstringoutputtypearray.h>
 
 using namespace xsens;
 
@@ -52,6 +53,37 @@ MtiX0Device::MtiX0Device(Communicator* comm) :
 */
 MtiX0Device::~MtiX0Device()
 {
+}
+
+XsStringOutputTypeArray MtiX0Device::supportedStringOutputTypes() const
+{
+	XsStringOutputTypeArray outputs;
+
+	if (deviceId().isImu() || deviceId().isVru() || deviceId().isAhrs())
+	{
+		outputs.push_back(XSOT_PSONCMS);
+		outputs.push_back(XSOT_HCMTW);
+		outputs.push_back(XSOT_HEROT);
+		outputs.push_back(XSOT_PTCF);
+		outputs.push_back(XSOT_GPZDA);
+	}
+
+	if (deviceId().isVru() || deviceId().isAhrs())
+	{
+		outputs.push_back(XSOT_TSS2);
+		outputs.push_back(XSOT_PHTRO);
+		outputs.push_back(XSOT_PRDID);
+		outputs.push_back(XSOT_EM1000);
+		outputs.push_back(XSOT_HEHDT);
+	}
+
+	if (deviceId().isAhrs())
+	{
+		outputs.push_back(XSOT_HCHDM);
+		outputs.push_back(XSOT_HCHDG);
+	}
+
+	return outputs;
 }
 
 /*! \brief Returns the base update rate (Hz) corresponding to the dataType. Returns 0 if no update rate is available
@@ -100,10 +132,29 @@ MtiBaseDevice::BaseFrequencyResult MtiX0Device::getBaseFrequencyInternal(XsDataI
 	return result;
 }
 
-void MtiX0Device::fetchAvailableHardwareScenarios()
+uint32_t MtiX0Device::supportedStatusFlags() const
 {
-	if (deviceId().isImu())						// If we are a 10 type device,
-		m_hardwareFilterProfiles.clear();				// there are no filter profiles in the firmware.
-	else												// For other device types,
-		MtiBaseDeviceEx::fetchAvailableHardwareScenarios();	// fetch the scenarios.
+	return (uint32_t) (0
+		| (deviceId().isImu() ? 0 : XSF_OrientationValid
+			|XSF_NoRotationMask
+			|XSF_RepresentativeMotion
+			)
+		|XSF_ExternalClockSynced
+		|XSF_ClipAccX
+		|XSF_ClipAccY
+		|XSF_ClipAccZ
+		|XSF_ClipGyrX
+		|XSF_ClipGyrY
+		|XSF_ClipGyrZ
+		|XSF_ClipMagX
+		|XSF_ClipMagY
+		|XSF_ClipMagZ
+		//|XSF_Retransmitted
+		|XSF_ClippingDetected
+		//|XSF_Interpolated
+		|XSF_SyncIn
+		|XSF_SyncOut
+		//|XSF_FilterMode
+		//|XSF_HaveGnssTimePulse
+		);
 }

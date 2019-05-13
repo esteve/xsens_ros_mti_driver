@@ -55,9 +55,9 @@ public:
 */
 
 /*! \brief Constructor, copies the \a message and creates a stack dump */
-JournalException::JournalException(std::string message)
-: XsException(XRV_ERROR, message)
-, m_stack("************ Dump Begin ************\n")
+JournalException::JournalException(std::string const& message)
+	: XsException(XRV_ERROR, message)
+	, m_stack("************ Dump Begin ************\n")
 {
 	JournalExceptionStackWalker sw(this);
 	sw.ShowCallstack();
@@ -90,7 +90,7 @@ bool gOnExceptionGotoDebugger = GOTODEBDEF;
 #ifdef XSENS_WINDOWS
 /*! \brief Exception filter for crash handler.
 
-	Using this filter in __try __except() will generate a crash log	with a call stack.
+	Using this filter in __try __except() will generate a crash log with a call stack.
 	\param pExPtrs pointers to exception struct, use GetExceptionInformation()
 	\param journal The Journaller object to use for logging
 */
@@ -105,4 +105,3 @@ LONG journallerExceptionFilter(EXCEPTION_POINTERS* pExPtrs, Journaller* journal)
 	return gOnExceptionGotoDebugger ? EXCEPTION_CONTINUE_SEARCH : EXCEPTION_EXECUTE_HANDLER;
 }
 #endif
-

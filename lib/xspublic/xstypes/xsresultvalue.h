@@ -85,6 +85,8 @@ enum XsResultValue {
 	,XRV_INVALIDFILTERPROFILE   = 49	//!< 49: Specified filter profile ID is not available on the device or the user is trying to duplicate an existing filter profile type
 	,XRV_INVALIDSTOREDSETTINGS	= 50	//!< 50: The settings stored in the device's non volatile memory are invalid
 	,XRV_ACCESSDENIED			= 51	//!< 51: Request for control of the device was denied
+	,XRV_FILEERROR				= 52	//!< 52: Failure reading, writing, opening or closing a file
+	,XRV_OUTPUTCONFIGERROR		= 53	//!< 53: Erroneous output configuration, device can not go to measurement
 
 	// CMT / XDA / XME / etc
 	,XRV_ERROR					= 256	//!< 256: A generic error occurred
@@ -145,6 +147,7 @@ enum XsResultValue {
 
 	,XRV_MEASUREMENTFAILED		= 305	//!< 305: An error occurred while trying to put the device in measurement mode
 	,XRV_STARTRECORDINGFAILED	= 306	//!< 306: A device could not start recording
+	,XRV_STOPRECORDINGFAILED	= 307	//!< 307: A device could not stop recording
 
 	,XRV_RADIO_CHANNEL_IN_USE	= 311	//!< 311: Radio channel is in use by another system
 	,XRV_UNEXPECTED_DISCONNECT	= 312	//!< 312: Motion tracker disconnected unexpectedly
@@ -156,6 +159,8 @@ enum XsResultValue {
 
 	,XRV_RESTORE_COMMUNICATION_FAILED	= 318	//!< 318: Restore communication failed
 	,XRV_RESTORE_COMMUNICATION_STOPPED	= 319	//!< 319: Restore communication was stopped
+
+	,XRV_EXPECTED_CONNECT		= 320	//!< 320: The device was connected
 
 	// notifications
 	,XRV_SHUTTINGDOWN			= 400	//!< 400: The device is shutting down

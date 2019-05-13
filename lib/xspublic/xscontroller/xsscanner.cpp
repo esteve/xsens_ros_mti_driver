@@ -38,10 +38,21 @@
 	\brief Provides static functionality for scanning for Xsens devices.
 */
 
+/*!	\brief Set a callback function for scan log progress and problem reporting
+	\details When set, any scan will use the provided callback function to report progress and failures.
+	Normal operation is not affected, so all return values for the scan functions remain valid.
+	\param cb The callback function to use. When set to NULL, no callbacks will be generated.
+*/
+void XsScanner_setScanLogCallback(XsScanLogCallbackFunc cb)
+{
+	Scanner::setScanLogCallback(cb);
+}
 
 /*! \copydoc XsScanner_scanPorts */
 void XsScanner_scanPorts_int(XsPortInfoArray* ports, XsBaudRate baudrate, int singleScanTimeout, int ignoreNonXsensDevices, int detectRs485)
 {
+	LOGXSSCAN(__FUNCTION__ << " baudrate " << baudrate << " singleScanTimeout " << singleScanTimeout << " ignoreNonXsensDevices " << ignoreNonXsensDevices << " detectRs485 " << detectRs485);
+
 	assert(ports != nullptr);
 	if (!ports)
 		return;
@@ -67,6 +78,7 @@ extern "C" {
 	*/
 	void XsScanner_scanPorts(XsPortInfoArray* ports, XsBaudRate baudrate, int singleScanTimeout, int ignoreNonXsensDevices, int detectRs485)
 	{
+		LOGXSSCAN(__FUNCTION__ << " baudrate " << baudrate << " singleScanTimeout " << singleScanTimeout << " ignoreNonXsensDevices " << ignoreNonXsensDevices << " detectRs485 " << detectRs485);
 		XsScanner_scanPorts_int(ports, baudrate, singleScanTimeout, ignoreNonXsensDevices, detectRs485);
 	}
 
@@ -80,6 +92,7 @@ extern "C" {
 	*/
 	int XsScanner_scanPort(XsPortInfo* port, XsBaudRate baudrate, int singleScanTimeout, int detectRs485)
 	{
+		LOGXSSCAN(__FUNCTION__ << " baudrate " << baudrate << " singleScanTimeout " << singleScanTimeout << " detectRs485 " << detectRs485);
 		assert(port != nullptr);
 		if (!port)
 			return 0;
@@ -94,6 +107,8 @@ extern "C" {
 	*/
 	void XsScanner_enumerateSerialPorts_int(XsPortInfoArray* ports, int ignoreNonXsensDevices)
 	{
+		LOGXSSCAN(__FUNCTION__ << " ignoreNonXsensDevices " << ignoreNonXsensDevices);
+
 		assert(ports != nullptr);
 		if (!ports)
 			return;
@@ -110,6 +125,7 @@ extern "C" {
 	/*! \copydoc XsScanner_enumerateSerialPorts_int */
 	void XsScanner_enumerateSerialPorts(XsPortInfoArray* ports, int ignoreNonXsensDevices)
 	{
+		LOGXSSCAN(__FUNCTION__ << " ignoreNonXsensDevices " << ignoreNonXsensDevices);
 		XsScanner_enumerateSerialPorts_int(ports, ignoreNonXsensDevices);
 	}
 
@@ -122,6 +138,7 @@ extern "C" {
 	*/
 	void XsScanner_filterResponsiveDevices(XsPortInfoArray* ports, XsBaudRate baudrate, int singleScanTimeout, int detectRs485)
 	{
+		LOGXSSCAN(__FUNCTION__ << " baudrate " << baudrate << " singleScanTimeout " << singleScanTimeout << " detectRs485 " << detectRs485);
 		assert(ports != nullptr);
 		if (!ports)
 			return;
@@ -147,6 +164,8 @@ extern "C" {
 	*/
 	void XsScanner_enumerateUsbDevices(XsPortInfoArray* ports)
 	{
+		LOGXSSCAN(__FUNCTION__);
+
 		assert(ports != nullptr);
 		if (!ports)
 			return;
@@ -166,6 +185,8 @@ extern "C" {
 	*/
 	void XsScanner_scanUsbHub(XsUsbHubInfo* hub, const XsPortInfo* port)
 	{
+		LOGXSSCAN(__FUNCTION__);
+
 		assert(hub != nullptr && port != nullptr);
 		if (!hub || !port)
 			return;
@@ -176,6 +197,7 @@ extern "C" {
 
 	void XsScanner_enumerateNetworkDevices(XsPortInfoArray* ports)
 	{
+		LOGXSSCAN(__FUNCTION__);
 		assert(ports != nullptr);
 		if (!ports)
 			return;
@@ -196,6 +218,7 @@ extern "C" {
 	*/
 	void XsScanner_abortScan(void)
 	{
+		LOGXSSCAN(__FUNCTION__);
 		XsScannerNamespace::abortPortScan = true;
 	}
 

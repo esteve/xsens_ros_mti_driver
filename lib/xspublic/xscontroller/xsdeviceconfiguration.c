@@ -131,26 +131,40 @@ void XsDeviceConfiguration_readFromMessage(XsDeviceConfiguration* thisPtr, const
 	nDevs = XsMessage_getDataShort(msg, 96);
 	if (nDevs != thisPtr->m_numberOfDevices)
 	{
-		//XsDeviceConfiguration_destruct(thisPtr);
 		XsDeviceConfiguration_assign(thisPtr, nDevs, 0);
 	}
 
 	thisPtr->m_masterInfo.m_masterDeviceId = XsMessage_getDataLong(msg, 0);
-	thisPtr->m_masterInfo.m_samplingPeriod = XsMessage_getDataShort(msg, 4);
-	thisPtr->m_masterInfo.m_outputSkipFactor = XsMessage_getDataShort(msg, 6);
-	thisPtr->m_masterInfo.m_syncInMode = XsMessage_getDataShort(msg, 8);
-	thisPtr->m_masterInfo.m_syncInSkipFactor = XsMessage_getDataShort(msg, 10);
-	thisPtr->m_masterInfo.m_syncInOffset = XsMessage_getDataLong(msg, 12);
+	XsDeviceId deviceId = { thisPtr->m_masterInfo.m_masterDeviceId, XSDEVICEID_PRODUCT_CODE_INIT, 0, 0};
+	if (XsDeviceId_isLegacyDeviceId(&deviceId))
+	{
+		thisPtr->m_masterInfo.m_samplingPeriod = XsMessage_getDataShort(msg, 4);
+		thisPtr->m_masterInfo.m_outputSkipFactor = XsMessage_getDataShort(msg, 6);
+	}
+	else
+	{
+		thisPtr->m_masterInfo.m_masterDeviceId = XsMessage_getDataLong(msg, 0);
+		thisPtr->m_masterInfo.m_masterDeviceId |= ((uint64_t)XsMessage_getDataLong(msg, 4) << 32);
+	}
+	memcpy(thisPtr->m_masterInfo.m_reserved1, XsMessage_getDataBuffer(msg, 8), 8);
 	memcpy(thisPtr->m_masterInfo.m_date, XsMessage_getDataBuffer(msg, 16), 8);
 	memcpy(thisPtr->m_masterInfo.m_time, XsMessage_getDataBuffer(msg, 24), 8);
-	memcpy(thisPtr->m_masterInfo.m_reservedForHost, XsMessage_getDataBuffer(msg, 32), 32);
-	memcpy(thisPtr->m_masterInfo.m_reservedForClient, XsMessage_getDataBuffer(msg, 64), 32);
+	memcpy(thisPtr->m_masterInfo.m_reserved2, XsMessage_getDataBuffer(msg, 32), 64);
 
 	for (i = 0; i < nDevs; ++i)
 	{
 		thisPtr->m_deviceInfo[i].m_deviceId = XsMessage_getDataLong(msg, 98+i*20);
-		thisPtr->m_deviceInfo[i].m_dataLength = XsMessage_getDataShort(msg, 102+i*20);
-		thisPtr->m_deviceInfo[i].m_outputMode = XsMessage_getDataShort(msg, 104+i*20);
+		XsDeviceId deviceId = {thisPtr->m_deviceInfo[i].m_deviceId, XSDEVICEID_PRODUCT_CODE_INIT, 0, 0};
+		if (XsDeviceId_isLegacyDeviceId(&deviceId))
+		{
+			memcpy(thisPtr->m_deviceInfo[i].m_reserved, XsMessage_getDataBuffer(msg, 102 + i * 20), 8);
+		}
+		else
+		{
+			thisPtr->m_deviceInfo[i].m_deviceId = XsMessage_getDataLong(msg, 98+i*20);
+			thisPtr->m_deviceInfo[i].m_deviceId |= ((uint64_t)XsMessage_getDataLong(msg, 102+i*20) << 32);
+			memcpy(thisPtr->m_deviceInfo[i].m_reserved, XsMessage_getDataBuffer(msg, 106 + i * 20), 4);
+		}
 		thisPtr->m_deviceInfo[i].m_filterProfile = XsMessage_getDataShort(msg, 110+i*20);
 		thisPtr->m_deviceInfo[i].m_fwRevMajor = XsMessage_getDataByte(msg, 112+i*20);
 		thisPtr->m_deviceInfo[i].m_fwRevMinor = XsMessage_getDataByte(msg, 113+i*20);
@@ -176,28 +190,38 @@ void XsDeviceConfiguration_writeToMessage(const XsDeviceConfiguration* thisPtr, 
 	msgHeader->m_messageId = XMID_Configuration;
 	msgHeader->m_busId = XS_BID_MASTER;
 
-//	XsMessage msg(XMID_CONFIGURATION);
-//	msg.setBusId(XS_BID_MASTER);
-//	msg.resizeData((uint16_t) (98 + m_deviceInfo.size() * 20));
+	XsDeviceId deviceId = {thisPtr->m_masterInfo.m_masterDeviceId, XSDEVICEID_PRODUCT_CODE_INIT, 0, 0};
+	if (XsDeviceId_isLegacyDeviceId(&deviceId))
+	{
+		XsMessage_setDataLong  (msg, (uint32_t)thisPtr->m_masterInfo.m_masterDeviceId, 0);
+		XsMessage_setDataShort (msg, thisPtr->m_masterInfo.m_samplingPeriod, 4);
+		XsMessage_setDataShort (msg, thisPtr->m_masterInfo.m_outputSkipFactor, 6);
+	}
+	else
+	{
+		XsMessage_setDataLong  (msg, (uint32_t)thisPtr->m_masterInfo.m_masterDeviceId & 0x00000000FFFFFFFF, 0);
+		XsMessage_setDataLong  (msg, (uint32_t)((thisPtr->m_masterInfo.m_masterDeviceId & 0xFFFFFFFF00000000) >> 32), 4);
+	}
 
-	XsMessage_setDataLong  (msg, thisPtr->m_masterInfo.m_masterDeviceId, 0);
-	XsMessage_setDataShort (msg, thisPtr->m_masterInfo.m_samplingPeriod, 4);
-	XsMessage_setDataShort (msg, thisPtr->m_masterInfo.m_outputSkipFactor, 6);
-	XsMessage_setDataShort (msg, thisPtr->m_masterInfo.m_syncInMode, 8);
-	XsMessage_setDataShort (msg, thisPtr->m_masterInfo.m_syncInSkipFactor, 10);
-	XsMessage_setDataLong  (msg, thisPtr->m_masterInfo.m_syncInOffset, 12);
+	XsMessage_setDataBuffer(msg, thisPtr->m_masterInfo.m_reserved1, 8, 8);
 	XsMessage_setDataBuffer(msg, thisPtr->m_masterInfo.m_date, 8, 16);
 	XsMessage_setDataBuffer(msg, thisPtr->m_masterInfo.m_time, 8, 24);
-	XsMessage_setDataBuffer(msg, thisPtr->m_masterInfo.m_reservedForHost, 32, 32);
-	XsMessage_setDataBuffer(msg, thisPtr->m_masterInfo.m_reservedForClient, 32, 64);
-	XsMessage_setDataShort (msg, thisPtr->m_numberOfDevices, 96);
+	XsMessage_setDataBuffer(msg, thisPtr->m_masterInfo.m_reserved2, 64, 32);
+	XsMessage_setDataShort(msg, thisPtr->m_numberOfDevices, 96);
 
 	for (i = 0; i < thisPtr->m_numberOfDevices; ++i)
 	{
-		XsMessage_setDataLong (msg, thisPtr->m_deviceInfo[i].m_deviceId, 98+i*20);
-		XsMessage_setDataShort(msg, thisPtr->m_deviceInfo[i].m_dataLength, 102+i*20);
-		XsMessage_setDataShort(msg, thisPtr->m_deviceInfo[i].m_outputMode, 104+i*20);
-		XsMessage_setDataLong (msg, 0, 106+i*20);
+		XsDeviceId deviceId = {thisPtr->m_deviceInfo[i].m_deviceId, XSDEVICEID_PRODUCT_CODE_INIT, 0, 0};
+		if (XsDeviceId_isLegacyDeviceId(&deviceId))
+		{
+			XsMessage_setDataLong (msg, (uint32_t)thisPtr->m_deviceInfo[i].m_deviceId, 98+i*20);
+			XsMessage_setDataBuffer(msg, thisPtr->m_masterInfo.m_reserved1, 8, 102+i*20);
+		}
+		else
+		{
+			XsMessage_setDataLongLong (msg, thisPtr->m_deviceInfo[i].m_deviceId, 98+i*20);
+			XsMessage_setDataBuffer(msg, thisPtr->m_masterInfo.m_reserved1, 4, 106+i*20);
+		}
 		XsMessage_setDataShort(msg, thisPtr->m_deviceInfo[i].m_filterProfile, 110+i*20);
 		XsMessage_setDataByte (msg, thisPtr->m_deviceInfo[i].m_fwRevMajor, 112+i*20);
 		XsMessage_setDataByte (msg, thisPtr->m_deviceInfo[i].m_fwRevMinor, 113+i*20);
@@ -227,5 +251,4 @@ XsSize XsDeviceConfiguration_findDevice(const XsDeviceConfiguration* thisPtr, co
 	}
 	return 0;
 }
- /*! @} */
  /*! @} */

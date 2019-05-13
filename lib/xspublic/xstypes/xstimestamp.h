@@ -262,16 +262,16 @@ struct XsTimeStamp {
 	}
 
 	/*! \brief Increment the timestamp by one ms, prefix */
-	XsTimeStamp operator++()
-	{ return XsTimeStamp(++m_msTime); }
+	XsTimeStamp& operator++()
+	{ ++m_msTime; return *this; }
 
 	/*! \brief Increment the timestamp by one ms, postfix */
 	XsTimeStamp operator++(int)
 	{ return XsTimeStamp(m_msTime++); }
 
 	/*! \brief Decrement the timestamp by one ms, prefix */
-	XsTimeStamp operator--()
-	{ return XsTimeStamp(--m_msTime); }
+	XsTimeStamp& operator--()
+	{ --m_msTime; return *this; }
 
 	/*! \brief Decrement the timestamp by one ms, postfix */
 	XsTimeStamp operator--(int)

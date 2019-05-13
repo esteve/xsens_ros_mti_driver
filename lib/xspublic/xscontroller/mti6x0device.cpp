@@ -30,77 +30,52 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#include "mtix00device.h"
-#include <xstypes/xssensorranges.h>
+#include "mti6x0device.h"
+
 #include <xstypes/xsdatapacket.h>
 #include "replyobject.h"
 #include "communicator.h"
 #include "scenariomatchpred.h"
 #include <xstypes/xsstatusflag.h>
-#include <xstypes/xsstringoutputtypearray.h>
+
+#include <xstypes/xssensorranges.h>
+#include "synclinegmt.h"
+#include <xstypes/xssyncsetting.h>
 
 using namespace xsens;
 
 /*! \brief Constructs a device
 	\param comm The communicator to construct with
 */
-MtiX00Device::MtiX00Device(Communicator* comm) :
+Mti6X0Device::Mti6X0Device(Communicator* comm) :
 	MtiBaseDeviceEx(comm)
 {
 }
 
 /*! \brief Destroys a device
 */
-MtiX00Device::~MtiX00Device()
+Mti6X0Device::~Mti6X0Device()
 {
-}
-
-XsStringOutputTypeArray MtiX00Device::supportedStringOutputTypes() const
-{
-	XsStringOutputTypeArray outputs;
-
-	if (deviceId().isImu() || deviceId().isVru() || deviceId().isAhrs())
-	{
-		outputs.push_back(XSOT_PSONCMS);
-		outputs.push_back(XSOT_HCMTW);
-		outputs.push_back(XSOT_HEROT);
-		outputs.push_back(XSOT_PTCF);
-		outputs.push_back(XSOT_GPZDA);
-	}
-
-	if (deviceId().isVru() || deviceId().isAhrs())
-	{
-		outputs.push_back(XSOT_TSS2);
-		outputs.push_back(XSOT_PHTRO);
-		outputs.push_back(XSOT_PRDID);
-		outputs.push_back(XSOT_EM1000);
-		outputs.push_back(XSOT_HEHDT);
-	}
-
-	if (deviceId().isAhrs())
-	{
-		outputs.push_back(XSOT_HCHDM);
-		outputs.push_back(XSOT_HCHDG);
-	}
-
-	return outputs;
 }
 
 /*! \brief Returns the base update rate (Hz) corresponding to the dataType
 */
-MtiBaseDevice::BaseFrequencyResult MtiX00Device::getBaseFrequencyInternal(XsDataIdentifier dataType) const
+MtiBaseDevice::BaseFrequencyResult Mti6X0Device::getBaseFrequencyInternal(XsDataIdentifier dataType) const
 {
 	MtiBaseDevice::BaseFrequencyResult result;
 	result.m_frequency = 0;
 	result.m_divedable = true;
 
-	if (dataType == XDI_FreeAcceleration && deviceId().isImu())
+	if ((dataType == XDI_FreeAcceleration && deviceId().isImu()) ||
+		((dataType & XDI_FullTypeMask) == XDI_LocationId) ||
+		((dataType & XDI_FullTypeMask) == XDI_DeviceId))
 		return result;
 
 	if ((dataType & XDI_FullTypeMask) == XDI_AccelerationHR || (dataType & XDI_FullTypeMask) == XDI_RateOfTurnHR)
 	{
-		result.m_frequency = 1000;
-		result.m_divedable = false;
+		bool isMtMk4_1_v2 = hardwareVersion().major() == 2;
+		result.m_frequency = isMtMk4_1_v2 ? 800 : 1000;
+		result.m_divedable = isMtMk4_1_v2 ? true : false;
 
 		return result;
 	}
@@ -109,23 +84,19 @@ MtiBaseDevice::BaseFrequencyResult MtiX00Device::getBaseFrequencyInternal(XsData
 	{
 		switch (dataType & XDI_TypeMask)
 		{
-		case XDI_None:					return 2000;
+		case XDI_None:					return 400;
 		case XDI_TimestampGroup:		return XDI_MAX_FREQUENCY_VAL;
-
-		case XDI_RawSensorGroup:		return 2000;
-		case XDI_AnalogInGroup:			return 2000;
-		case XDI_StatusGroup:			return 2000;
-
+		case XDI_StatusGroup:			return 400;
 		case XDI_TemperatureGroup:		return 400;
-		case XDI_PositionGroup:			return deviceId().isGnss() ? 400 : 0;
-		case XDI_VelocityGroup:			return deviceId().isGnss() ? 400 : 0;
 		case XDI_OrientationGroup:		return deviceId().isImu() ? 0 : 400;
 		case XDI_AccelerationGroup:		return 400;
 		case XDI_AngularVelocityGroup:	return 400;
-		case XDI_MagneticGroup:			return 100;
-		case XDI_PressureGroup:			return 50;
+		case XDI_MagneticGroup:			return 400;
 
 		case XDI_GnssGroup:				return deviceId().isGnss() ? 4 : 0;
+		case XDI_PressureGroup:			return deviceId().isGnss() ? 50 : 0;
+		case XDI_PositionGroup:			return deviceId().isGnss() ? 400 : 0;
+		case XDI_VelocityGroup:			return deviceId().isGnss() ? 400 : 0;
 		default:						return 0;
 		}
 	};
@@ -137,7 +108,56 @@ MtiBaseDevice::BaseFrequencyResult MtiX00Device::getBaseFrequencyInternal(XsData
 	return result;
 }
 
-uint32_t MtiX00Device::supportedStatusFlags() const
+/*! \returns The components information from the device.
+*/
+XsByteArray Mti6X0Device::componentsInformation() const
+{
+	uint8_t bid = busId();
+	if (bid == XS_BID_INVALID || bid == XS_BID_BROADCAST)
+		return XsByteArray();
+
+	XsMessage snd(XMID_ReqComponentsInformation, 0), rcv;
+	snd.setBusId(bid);
+
+	if (!doTransaction(snd, rcv))
+		return XsByteArray();
+
+	XsByteArray componentsInfo(const_cast<uint8_t*>(rcv.getDataBuffer()), rcv.getDataSize(), XSDF_None);
+
+	return componentsInfo;
+}
+
+/*! \returns The sync settings line for a mtmk4_x device. This overrides the base class method.
+	\param buff The pointer to a buffer to get a sync setting line from
+	\param offset The offeset to set for the buffer
+*/
+XsSyncLine Mti6X0Device::syncSettingsLine(const uint8_t* buff, XsSize offset) const
+{
+	return	xslgmtToXsl((SyncLineGmt) buff[offset + 1]);
+}
+
+/*! \returns The sync line for a mtmk4_x device. This overrides the base class method.
+	\param setting The sync setting to get a sync line from
+*/
+uint8_t Mti6X0Device::syncLine(const XsSyncSetting& setting) const
+{
+	SyncLineGmt gmtLine = xslToXslgmt(setting.m_line);
+	assert(gmtLine != XSLGMT_Invalid);
+	if (gmtLine == XSLGMT_ClockIn)
+	{
+		assert(setting.m_function == XSF_SampleAndSend);
+	}
+	return static_cast<uint8_t>(gmtLine);
+}
+
+/*! \returns True if this device has an ICC support
+*/
+bool Mti6X0Device::hasIccSupport() const
+{
+	return (firmwareVersion() >= XsVersion(1, 1, 0));
+}
+
+uint32_t Mti6X0Device::supportedStatusFlags() const
 {
 	return (uint32_t) (0
 		| (deviceId().isImu() ? 0 : XSF_OrientationValid

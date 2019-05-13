@@ -75,6 +75,7 @@ typedef struct XsDataPacket XsDataPacket;
 #endif
 
 XSTYPES_DLL_API void XsDataPacket_construct(XsDataPacket* thisPtr);
+XSTYPES_DLL_API void XsDataPacket_copyConstruct(XsDataPacket* thisPtr, XsDataPacket const* src);
 XSTYPES_DLL_API void XsDataPacket_destruct(XsDataPacket* thisPtr);
 XSTYPES_DLL_API void XsDataPacket_clear(XsDataPacket* thisPtr, XsDataIdentifier id);
 XSTYPES_DLL_API void XsDataPacket_copy(XsDataPacket* copy, XsDataPacket const* src);
@@ -271,8 +272,7 @@ struct XsDataPacket {
 	*/
 	inline XsDataPacket(const XsDataPacket& pack)
 	{
-		XsDataPacket_construct(this);
-		*this = pack;
+		XsDataPacket_copyConstruct(this, &pack);
 	}
 
 	//! \copydoc XsDataPacket_destruct
@@ -286,7 +286,7 @@ struct XsDataPacket {
 		\returns A reference to this %XsDataPacket
 		\sa XsDataPacket_copy
 	*/
-	inline const XsDataPacket& operator = (const XsDataPacket& other)
+	inline XsDataPacket& operator = (const XsDataPacket& other)
 	{
 		if (this != &other)
 			XsDataPacket_copy(this, &other);
@@ -1285,7 +1285,7 @@ struct XsDataPacket {
 	/*! \brief Set the time of arrival of the data packet
 		\param t The time of arrival
 	*/
-	inline void setTimeOfArrival(XsTimeStamp t)
+	inline void setTimeOfArrival(const XsTimeStamp& t)
 	{
 		m_toa = t;
 	}
@@ -1299,7 +1299,7 @@ struct XsDataPacket {
 	/*! \brief Set the estimated time of sampling of the data packet
 		\param t The estimated time of sampling
 	*/
-	inline void setEstimatedTimeOfSampling(XsTimeStamp t)
+	inline void setEstimatedTimeOfSampling(const XsTimeStamp& t)
 	{
 		m_etos = t;
 	}

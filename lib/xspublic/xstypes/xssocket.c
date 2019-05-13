@@ -123,8 +123,8 @@ static void getRemoteHostAddress(const struct sockaddr_storage *remote, XsString
 			length = INET6_ADDRSTRLEN;
 			break;
 	}
-	XsString_resize(address, length);
-	if (inet_ntop(remote->ss_family, src, address->m_data, length) == NULL)
+	XsString_resize(address, (XsSize)(ptrdiff_t) length);
+	if (inet_ntop(remote->ss_family, src, address->m_data, (size_t)(ptrdiff_t) length) == NULL)
 		XsString_erase(address, 0, address->m_size);
 }
 
@@ -326,14 +326,14 @@ void XsSocket_create(XsSocket* thisPtr, enum NetworkLayerProtocol ip, enum IpPro
 	we will fetch the information from the socket. Doing so by default would add a possible
 	extra point of failure.
 */
-void XsSocket_createFromNativeSocket(XsSocket* thisPtr, SOCKET nativeSocket, struct sockaddr *theirInfo, socklen_t infolen, XsDataFlags flags)
+void XsSocket_createFromNativeSocket(XsSocket* thisPtr, SOCKET nativeSocket, struct sockaddr const *theirInfo, socklen_t infolen, XsDataFlags flags)
 {
 	XsSocket_initialize(thisPtr, flags);
 	thisPtr->d->m_sd = nativeSocket;
 
 	if (theirInfo)
 	{
-		memcpy(&thisPtr->d->m_remoteAddr, theirInfo, infolen);
+		memcpy(&thisPtr->d->m_remoteAddr, theirInfo, (size_t)(ptrdiff_t) infolen);
 		thisPtr->d->m_remoteAddrLen = infolen;
 	}
 	else
@@ -506,7 +506,7 @@ int XsSocket_select(XsSocket* thisPtr, int mstimeout, int *canRead, int *canWrit
 */
 int XsSocket_read(XsSocket* thisPtr, void* dest, XsSize size, int timeout)
 {
-	return XsSocket_readFrom(thisPtr, dest, (int)size, NULL, NULL, timeout);
+	return XsSocket_readFrom(thisPtr, dest, size, NULL, NULL, timeout);
 }
 
 /* peek at the size of the incoming data */
@@ -541,6 +541,7 @@ int XsSocket_readFrom(XsSocket* thisPtr, void* dest, XsSize size, XsString* host
 	socklen_t l = sizeof(sender);
 
 	rv = XsSocket_select(thisPtr, timeout, &canRead, NULL);
+	(void) canRead;
 	if (rv <= 0)
 		return rv;
 
@@ -590,6 +591,7 @@ int XsSocket_readFrom2ByteArray(XsSocket* thisPtr, XsByteArray* dest, XsString* 
 	socklen_t l = sizeof(sender);
 
 	rv = XsSocket_select(thisPtr, timeout, &canRead, NULL);
+	(void) canRead;
 	if (rv <= 0)
 		return rv;
 
@@ -599,7 +601,7 @@ int XsSocket_readFrom2ByteArray(XsSocket* thisPtr, XsByteArray* dest, XsString* 
 	rv = recvfrom(thisPtr->d->m_sd, thisPtr->d->m_peekBuf, PEEKBUFSIZE, 0, (struct sockaddr *)&sender, &l);
 	if (rv <= 0)
 		return rv;
-	XsByteArray_assign(dest, rv, thisPtr->d->m_peekBuf);
+	XsByteArray_assign(dest, (XsSize)(ptrdiff_t) rv, thisPtr->d->m_peekBuf);
 
 	if (hostname)
 		getRemoteHostAddress(&sender, hostname);
@@ -623,10 +625,11 @@ int XsSocket_write(XsSocket* thisPtr, const void* data, XsSize size)
 {
 	int canWrite;
 	int rv = XsSocket_select(thisPtr, 0, NULL, &canWrite);
+	(void) canWrite;
 	if (rv <= 0)
 		return rv;
 
-	return send(thisPtr->d->m_sd, data, (int)size, MSG_NOSIGNAL);
+	return send(thisPtr->d->m_sd, data, (int)(ptrdiff_t)size, MSG_NOSIGNAL);
 }
 
 /* Return non-zero if the hostname is actually an IPv4 address */
@@ -668,7 +671,7 @@ int isIPv4Address(const XsString* hostname)
 }
 
 /* Prefix the hostname with ::ffff: if we're on ipv6 and hostname looks like a ipv4 address */
-void XsSocket_fixupHostname(XsSocket* thisPtr, XsString* hostname)
+void XsSocket_fixupHostname(XsSocket const* thisPtr, XsString* hostname)
 {
 	if (!hostname || !hostname->m_data)
 		return;
@@ -683,7 +686,7 @@ void XsSocket_fixupHostname(XsSocket* thisPtr, XsString* hostname)
 	}
 }
 
-typedef int (*lookupTestFunction)(XsSocket* thisPtr, SOCKET currentSocket, struct addrinfo* info);
+typedef int (*lookupTestFunction)(XsSocket* thisPtr, SOCKET currentSocket, struct addrinfo const* info);
 
 /* Do a lookup of the given hostname and port
 
@@ -719,7 +722,7 @@ static XsResultValue XsSocket_internalLookup(XsSocket* thisPtr, const XsString* 
 	hints.ai_socktype = (thisPtr->d->m_ipProtocol == IP_UDP) ? SOCK_DGRAM : SOCK_STREAM;
 	hints.ai_flags = hints_flags;
 
-	sprintf(gaport, "%u", port);
+	sprintf(gaport, "%u", (unsigned int) port);
 	if (hostname)
 	{
 		XsString host;
@@ -777,7 +780,7 @@ static XsResultValue XsSocket_internalLookup(XsSocket* thisPtr, const XsString* 
 			{
 				if ((socklen_t)p->ai_addrlen < *addrlen)
 					*addrlen = (socklen_t)p->ai_addrlen;
-				memcpy(info, p->ai_addr, *addrlen);
+				memcpy(info, p->ai_addr, (size_t)(ptrdiff_t) *addrlen);
 			}
 			break;
 		}
@@ -788,7 +791,7 @@ static XsResultValue XsSocket_internalLookup(XsSocket* thisPtr, const XsString* 
 }
 
 /* try and see if we can connect on currentSocket to the remote host */
-static int defaultLookupTest(XsSocket* thisPtr, SOCKET currentSocket, struct addrinfo* info)
+static int defaultLookupTest(XsSocket* thisPtr, SOCKET currentSocket, struct addrinfo const* info)
 {
 	(void)thisPtr;
 	return connect(currentSocket, info->ai_addr, (int)info->ai_addrlen);
@@ -820,6 +823,7 @@ int XsSocket_writeTo(XsSocket* thisPtr, const void* data, XsSize size, const XsS
 	int rv;
 
 	rv = XsSocket_select(thisPtr, 0, NULL, &canWrite);
+	(void) canWrite;
 	if (rv <= 0)
 		return rv;
 
@@ -875,6 +879,7 @@ XsSocket* XsSocket_accept(XsSocket* thisPtr, int mstimeout)
 	{
 		int read;
 		int rv = XsSocket_select(thisPtr, mstimeout, &read, NULL);
+		(void) read;
 		if (rv == 0)
 		{
 			(void)setLastResult(thisPtr, XRV_TIMEOUTNODATA, 0);
@@ -967,7 +972,7 @@ XsResultValue XsSocket_setSocketOption(XsSocket *thisPtr, enum XsSocketOption op
 
 	keeps the bind alive after leaving the function
 */
-static int binder(XsSocket* thisPtr, SOCKET currentSocket, struct addrinfo* info)
+static int binder(XsSocket* thisPtr, SOCKET currentSocket, struct addrinfo const* info)
 {
 	int res;
 	int yesval = 1;
@@ -1043,7 +1048,7 @@ XsResultValue XsSocket_listen(XsSocket* thisPtr, int maxPending)
 
 	Keep the connection alive
 */
-static int connector(XsSocket* thisPtr, SOCKET currentSocket, struct addrinfo* info)
+static int connector(XsSocket* thisPtr, SOCKET currentSocket, struct addrinfo const* info)
 {
 	int ret;
 	(void)currentSocket;

@@ -40,25 +40,26 @@
 	\details These options are used to specify whether XDA should compute certain kinds of data from
 	available other data. XsOptions can be logically ORed together
 */
-//AUTO namespace xscontroller {
+//AUTO namespace xstypes {
 enum XsOption {
-	  XSO_None = 0			//!< No option
-	, XSO_Calibrate = 0x0001	//!< Compute calibrated inertial data from raw data and temperature
-	, XSO_Orientation = 0x0002	//!< Compute orientation, the orientation is typically only computed in one stream. If not specified the system will decide: when reading from file it will use XSO_OrientationInBufferedStream, otherwise XSO_OrientationInLiveStream.
+	  XSO_None = 0					//!< No option
+	, XSO_Calibrate = 0x0001		//!< Compute calibrated inertial data from raw data and temperature
+	, XSO_Orientation = 0x0002		//!< Compute orientation, the orientation is typically only computed in one stream. If not specified the system will decide: when reading from file it will use XSO_OrientationInBufferedStream, otherwise XSO_OrientationInLiveStream.
 
-	, XSO_KeepLastLiveData = 0x0004	//!< Keep the last available live data in a cache so XsDevice::lastAvailableLiveData will work
-	, XSO_RetainLiveData = 0x0008	//!< Keep the live data in a cache so it can be accessed through XsDevice::getDataPacketByIndex or XsDevice::takeFirstDataPacketInQueue. This option is mutually exclusive with XSO_RetainBufferedData. If both are set, XSO_RetainBufferedData will be used.
-	, XSO_RetainBufferedData = 0x0010	//!< Keep the buffered data in a cache so it can be accessed through XsDevice::getDataPacketByIndex or XsDevice::takeFirstDataPacketInQueue. This option is mutually exclusive with XSO_RetainLiveData. If both are set, XSO_RetainBufferedData will be used.
-	, XSO_OrientationInLiveStream = 0x0020	//!< Compute orientation in the live stream. This is no longer (since version 4.9.2) mutually exclusive with XSO_OrientationInBufferedStream, but unless they're both explicitly set, the system will choose only one stream to use. Please note that this option does not do anything unless XSO_Orientation is also enabled.
+	, XSO_KeepLastLiveData = 0x0004				//!< Keep the last available live data in a cache so XsDevice::lastAvailableLiveData will work
+	, XSO_RetainLiveData = 0x0008				//!< Keep the live data in a cache so it can be accessed through XsDevice::getDataPacketByIndex or XsDevice::takeFirstDataPacketInQueue. This option is mutually exclusive with XSO_RetainBufferedData. If both are set, XSO_RetainBufferedData will be used.
+	, XSO_RetainBufferedData = 0x0010			//!< Keep the buffered data in a cache so it can be accessed through XsDevice::getDataPacketByIndex or XsDevice::takeFirstDataPacketInQueue. This option is mutually exclusive with XSO_RetainLiveData. If both are set, XSO_RetainBufferedData will be used.
+	, XSO_OrientationInLiveStream = 0x0020		//!< Compute orientation in the live stream. This is no longer (since version 4.9.2) mutually exclusive with XSO_OrientationInBufferedStream, but unless they're both explicitly set, the system will choose only one stream to use. Please note that this option does not do anything unless XSO_Orientation is also enabled.
 	, XSO_OrientationInBufferedStream = 0x0040	//!< Compute orientation in the buffered stream. This is no longer (since version 4.9.2) mutually exclusive with XSO_OrientationInLiveStream, but unless they're both explicitly set, the system will choose only one stream to use. Please note that this option does not do anything unless XSO_Orientation is also enabled.
 
 	, XSO_ApplyOrientationResetToCalData = 0x0080	//!< Apply orientation reset to calibrated acc, gyr and mag (object reset only) and heading reset to free acc. Default is enabled for the MTw family, disabled for others
 
-	, XSO_SkipDataBundling = 0x2000	//!< When set, the onAll...DataAvailable callbacks will not be called by the master device. This prevents some internal buffering.
+	, XSO_InterpolateMissingData = 0x1000			//!< When set, any gaps in the data streams of child devices will be filled with interpolated data. This is only for applications that require data for each sample counter. Not recommended when XSO_SkipDataBundling is disabled.
+	, XSO_SkipDataBundling = 0x2000					//!< When set, the onAll...DataAvailable callbacks will not be called by the master device. This prevents some internal buffering.
 	, XSO_ExpectNoRetransmissionsInFile = 0x4000	//!< When set and reading a file, missing data is immediately treated as unavailable. The default behaviour is to read further in the file to see if the data was retransmitted.
-	, XSO_Reserved = 0x8000		//!< Reserved for internal use
+	, XSO_Reserved = 0x8000							//!< Reserved for internal use
 
-	, XSO_All					= 0x807F	//!< All options, note that setting 'all options' is not valid, but it is useful for clearing all options
+	, XSO_All = 0xFFFF				//!< All options, note that setting 'all options' is not valid, but it is useful for clearing all options
 };
 
 /*! @} */

@@ -55,6 +55,9 @@ extern "C" {
 #endif
 struct XsPortInfo;
 
+//! \brief Defines the callback type that can be supplied to XsScanner_setScanLogCallback
+typedef void (*XsScanLogCallbackFunc)(struct XsString const*);
+
 XDA_DLL_API void XsScanner_scanPorts(struct XsPortInfoArray* ports, XsBaudRate baudrate, int singleScanTimeout, int ignoreNonXsensDevices, int detectRs485);
 XDA_DLL_API int XsScanner_scanPort(struct XsPortInfo* port, XsBaudRate baudrate, int singleScanTimeout, int detectRs485);
 XDA_DLL_API void XsScanner_enumerateSerialPorts(struct XsPortInfoArray* ports, int ignoreNonXsensDevices);
@@ -63,6 +66,7 @@ XDA_DLL_API void XsScanner_enumerateUsbDevices(struct XsPortInfoArray* ports);
 XDA_DLL_API void XsScanner_scanUsbHub(struct XsUsbHubInfo* hub, const struct XsPortInfo* port);
 XDA_DLL_API void XsScanner_enumerateNetworkDevices(struct XsPortInfoArray* ports);
 XDA_DLL_API void XsScanner_abortScan(void);
+XDA_DLL_API void XsScanner_setScanLogCallback(XsScanLogCallbackFunc cb);
 
 #ifdef __cplusplus
 } // extern "C"
@@ -201,6 +205,17 @@ public:
 	static inline void abortScan(void)
 	{
 		XsScanner_abortScan();
+	}
+
+	/*!	\brief Set a callback function for scan log progress and problem reporting
+		\details When set, any scan will use the provided callback function to report progress and failures.
+		Normal operation is not affected, so all return values for the scan functions remain valid.
+		\param cb The callback function to use. When set to NULL, no callbacks will be generated.
+		\sa XsScanner_setScanLogCallback
+	*/
+	static inline void XSNOCOMEXPORT setScanLogCallback(XsScanLogCallbackFunc cb)
+	{
+		XsScanner_setScanLogCallback(cb);
 	}
 };
 

@@ -246,17 +246,19 @@ DWORD usbReadThreadFunc(void* obj)
 {
 	UsbInterfacePrivate* d = (UsbInterfacePrivate*) obj;
 	d->m_running = true;
-	xsSetThreadPriority(xsGetCurrentThreadHandle(), XS_THREAD_PRIORITY_HIGHEST);
+	xsSetThreadPriority(::GetCurrentThread(), XS_THREAD_PRIORITY_HIGHEST);	// not using xsGetCurrentThreadHandle here because we can directly use GetCurrentThread(), which is simpler
 	xsNameThisThread("USB reader");
-	try {
-		d->threadFunc();
-		d->m_running = false;
-	} catch(...)
+	try
 	{
-		xsNameThisThread("Crashed USB reader");
-		d->m_running = false;
-		XsTime::msleep(10000);
+		d->threadFunc();
 	}
+	catch(...)
+	{
+#ifdef XSENS_DEBUG
+		assert(0);
+#endif
+	}
+	d->m_running = false;
 	return 0;
 }
 

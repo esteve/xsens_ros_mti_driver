@@ -35,7 +35,7 @@
 #include <xscommon/xsens_threadpool.h>
 #include <xstypes/xsdeviceid.h>
 #include <xstypes/xsstring.h>
-#include <xstypes/xsoutputconfigurationlist.h>
+#include <xstypes/xsoutputconfigurationarray.h>
 #include <xstypes/xsdeviceidarray.h>
 #include <xstypes/xsportinfo.h>
 #include <xstypes/xssyncsettingarray.h>
@@ -43,11 +43,11 @@
 #include "communicator.h"
 #include "mtbdatalogger.h"
 #include <xstypes/xsbaud.h>
-#include "xsfilterprofile.h"
+#include <xstypes/xsfilterprofile.h>
 #include "xsselftestresult.h"
 #include <xstypes/xsscrdata.h>
 #include <xstypes/xscalibrateddata.h>
-#include "xsresetmethod.h"
+#include <xstypes/xsresetmethod.h>
 #include <xstypes/xssyncsetting.h>
 #include "nmea_protocolhandler.h"
 #include <xstypes/xsrssi.h>
@@ -56,6 +56,10 @@
 #include "xsdeviceptrarray.h"
 #include <functional>
 #include <xstypes/xsdatapacketptrarray.h>
+#include <xstypes/xsfilterprofilearray.h>
+#include <xstypes/xsstringoutputtypearray.h>
+#include "xsdef.h"
+#include "xsiccrepmotionresult.h"
 
 //! \cond DOXYGEN_SHOULD_SKIP_THIS
 using namespace xsens;
@@ -693,10 +697,9 @@ const XsDevice *XsDevice::deviceAtBusIdConst(int busid) const
 	return const_cast<XsDevice const*>(const_cast<XsDevice*>(this)->deviceAtBusId(busid));
 }
 
-/*! \brief Restart the filter used by this device */
+/*! \brief Restart the software filter used by this device */
 void XsDevice::restartFilter()
 {
-	return;
 }
 
 /*!	\brief Get the result value of the last operation.
@@ -1086,6 +1089,14 @@ bool XsDevice::setStringOutputMode(uint16_t type, uint16_t period, uint16_t skip
 	return true;
 }
 
+/*! \brief Ask the device for its supported string output types.
+	\returns A list with the supported string output types.
+*/
+XsStringOutputTypeArray XsDevice::supportedStringOutputTypes() const
+{
+	return XsStringOutputTypeArray();
+}
+
 /*! \cond XS_INTERNAL */
 /*! \brief Schedules the orientation reset
 	\param method The reset method to use
@@ -1276,7 +1287,7 @@ void XsDevice::handleMessage(const XsMessage &msg)
 		break;
 
 	default:
-		JLDEBUGG("Handling non-data msg " << msg.getMessageId());
+		JLDEBUGG("Handling non-data msg " << msg.getMessageId() << " bid " << JLHEXLOG((int)msg.getBusId()));
 		handleNonDataMessage(msg);
 		break;
 	}
@@ -1438,6 +1449,7 @@ void XsDevice::handleDataPacket(const XsDataPacket &packet)
 	JLDEBUGG("stamped: " << current << " new latestlive: " << latestLivePacketConst().packetId());
 #endif
 
+	bool interpolate = false;
 	if (fastest >= 0)
 	{
 		int64_t dpc = current - fastest;
@@ -1456,16 +1468,34 @@ void XsDevice::handleDataPacket(const XsDataPacket &packet)
 				{
 					//JLDEBUGG("not expecting retransmission for packet " << i);
 					handleUnavailableData(i);
+					if (m_options & XSO_InterpolateMissingData)
+						interpolate = true;
 				}
 			}
 		}
 	}
+	else if (isReadingFromFile() && getStartRecordingPacketId() == -1)
+		setStartRecordingPacketId(current);
 
 	if (current >= fastest)
 	{
 		JLTRACEG("Processing (live) packet " << current);
 		std::unique_ptr<XsDataPacket> copy(new XsDataPacket(*pack));
 		processLivePacket(*copy);
+
+		if (interpolate)
+		{
+			// when this returns true, the packet has been processed properly already so we should return
+			if (interpolateMissingData(*copy, latestLivePacketConst(),
+				[this](XsDataPacket* ppp)
+				{
+					handleDataPacket(*ppp);
+					delete ppp;
+				}))
+			{
+				return;
+			}
+		}
 
 		// store result
 		latestLivePacket().swap(*copy);
@@ -1620,7 +1650,7 @@ bool XsDevice::readDeviceConfiguration()
 				return false;
 			m_config.readFromMessage(rcv);
 
-			rcv = comm->readMessage(XMID_FirmwareRevision);
+			rcv = comm->readMessageFromStartOfFile(XMID_FirmwareRevision, Communicator::configurationMessageSearchLimit() * (busId() == XS_BID_MASTER ? 2 : (1+busId())));
 			if (comm->lastResult() != XRV_OK)
 				// We cannot determine the firmware version of the master, use the first sensor (fallback)
 				m_firmwareVersion = XsVersion(m_config.deviceInfo(busId()).m_fwRevMajor, m_config.deviceInfo(busId()).m_fwRevMinor, m_config.deviceInfo(busId()).m_fwRevRevision);
@@ -1668,7 +1698,7 @@ bool XsDevice::readDeviceConfiguration()
 	{
 		try
 		{
-			const XsMtDeviceConfiguration& devinf = deviceConfiguration().deviceInfo(deviceId());
+			const XsMtDeviceConfiguration& devinf = deviceConfigurationConst().deviceInfo(deviceId());
 			XsVersion old = m_firmwareVersion;
 			m_firmwareVersion = XsVersion(devinf.m_fwRevMajor, devinf.m_fwRevMinor, devinf.m_fwRevRevision);
 #ifndef XSENS_DEBUG
@@ -1685,6 +1715,26 @@ bool XsDevice::readDeviceConfiguration()
 	}
 	return false;
 }
+
+/*! \brief Returns a const reference to the device configuration
+	\details The device configuration contains a summary of the devices connected to the same port.
+	The function will always return the configuration for the port's main device.
+	\returns A copy of the device configuration of the port
+*/
+XsDeviceConfiguration const& XsDevice::deviceConfigurationConst() const
+{
+	return m_config;
+}
+
+/*! \brief Returns a reference to the device configuration
+	\details The device configuration contains a summary of the devices connected to the same port.
+	The function will always return the configuration for the port's main device.
+	\returns A reference to the device configuration of the port
+*/
+XsDeviceConfiguration& XsDevice::deviceConfigurationRef()
+{
+	return const_cast<XsDeviceConfiguration&>(deviceConfigurationConst());
+}
 /*! \endcond */
 
 /*! \brief Returns the device configuration
@@ -1694,17 +1744,7 @@ bool XsDevice::readDeviceConfiguration()
 */
 XsDeviceConfiguration XsDevice::deviceConfiguration() const
 {
-	return m_config;
-}
-
-/*! \brief Returns the device configuration
-	\details The device configuration contains a summary of the devices connected to the same port.
-	The function will always return the configuration for the port's main device.
-	\returns A reference to the device configuration of the port
-*/
-XsDeviceConfiguration& XsDevice::deviceConfiguration()
-{
-	return m_config;
+	return deviceConfigurationConst();
 }
 
 /*! \brief Restore the device to its factory default settings
@@ -2392,6 +2432,23 @@ bool XsDevice::setXdaFilterProfile(int profileType)
 	return false;
 }
 
+/*! \brief Sets the filter profile to use for computing orientations on the host PC
+	\details When computing orientation data, there is a choice of filter profiles. This function can
+	be used	to select the appropriate one. By default XDA will attempt to match the software filter profile
+	to the configured hardware filter profile when detecting a new device.
+	\param profileType The filter profile type to use. This can be chosen from the list returned by
+		availableXdaFilterProfiles()
+	\returns true if the filter profile was successfully changed
+	\note When reading from a file, make sure to call resetLogFileReadPosition() and possibly
+	loadLogFile() after changing the filter profile to make sure all cached data is recomputed.
+	\sa availableXdaFilterProfiles \sa xdaFilterProfile \sa setOnboardFilterProfile
+*/
+bool XsDevice::setXdaFilterProfile(XsString const& profileType)
+{
+	(void)profileType;
+	return false;
+}
+
 /*! \brief Gets the filter profile in use by the device for computing orientations
 	\returns The filter profile in use when computing orientations is done on the device
 	\sa setOnboardFilterProfile \sa xdaFilterProfile
@@ -2415,12 +2472,27 @@ bool XsDevice::setOnboardFilterProfile(int profileType)
 	return false;
 }
 
+/*! \brief Sets the filter profile to use for computing orientations on the device
+	\details When computing orientation data, there is a choice of filter profiles. This function can
+	be used to select the appropriate one.
+	\param profileType The filter profile type to use. This can be chosen from the list returned by
+		availableOnboardFilterProfiles()
+	\returns true if the filter profile was successfully changed
+	\sa availableOnboardFilterProfiles \sa onboardFilterProfile \sa setXdaFilterProfile
+*/
+bool XsDevice::setOnboardFilterProfile(XsString const& profileType)
+{
+	(void)profileType;
+	return false;
+}
+
 /*!	\brief Replaces profileCurrent by profileNew in the device
 	\param profileCurrent The profile that should be replaced
 	\param profileNew The new profile
 	\return true if successful, false otherwise
+	\note The default implementation does nothing as this feature requires the full XDA
 */
-bool XsDevice::replaceFilterProfile(const XsFilterProfile& profileCurrent, const XsFilterProfile& profileNew)
+bool XsDevice::replaceFilterProfile(XsFilterProfile const& profileCurrent, XsFilterProfile const& profileNew)
 {
 	(void)profileCurrent;
 	(void)profileNew;
@@ -2431,18 +2503,18 @@ bool XsDevice::replaceFilterProfile(const XsFilterProfile& profileCurrent, const
 	\returns The list of filter profiles available for computing orientations on the device
 	\sa availableXdaFilterProfiles \sa onboardFilterProfile \sa setOnboardFilterProfile
 */
-std::vector<XsFilterProfile> XsDevice::availableOnboardFilterProfiles() const
+XsFilterProfileArray XsDevice::availableOnboardFilterProfiles() const
 {
-	return std::vector<XsFilterProfile>();
+	return XsFilterProfileArray();
 }
 
 /*! \brief Return the list of filter profiles available on the host PC
 	\returns The list of filter profiles available for computing orientations on the host PC
 	\sa availableOnboardFilterProfiles \sa xdaFilterProfile \sa setXdaFilterProfile
 */
-std::vector<XsFilterProfile> XsDevice::availableXdaFilterProfiles() const
+XsFilterProfileArray XsDevice::availableXdaFilterProfiles() const
 {
-	return std::vector<XsFilterProfile>();
+	return XsFilterProfileArray();
 }
 
 /*! \brief Returns the maximum official value of the accelerometers in the device
@@ -3138,7 +3210,6 @@ void XsDevice::setOptions(XsOption enable, XsOption disable)
 	XsOption upd = XsOption_purify((XsOption) ((m_options & ~disable) | enable));
 	static const XsOption mask = XSO_KeepLastLiveData | XSO_RetainLiveData | XSO_RetainBufferedData;
 
-
 	// this has to be done in this order to prevent timing issues
 	bool clr = ((m_options & mask) != (upd & mask));
 	m_options = upd;
@@ -3605,6 +3676,11 @@ void XsDevice::onMessageSent(const XsMessage &msg)
 void XsDevice::onMessageReceived(const XsMessage &msg)
 {
 	onMessageReceivedFromDevice(this, &msg);
+}
+
+void XsDevice::onMessageDetected(XsProtocolType type, const XsByteArray &rawMessage)
+{
+	CallbackManagerXda::onMessageDetected(this, type, &rawMessage);
 }
 
 void XsDevice::onSessionRestarted()
@@ -4228,6 +4304,21 @@ XsDevice const* XsDevice::firstChild() const
 {
 	return this;
 }
+
+/*! \brief Tell XDA to interpolate missing items from \a prev to \a pack
+	\param pack The latest received packet
+	\param prev The previously received packet
+	\param packetHandler The function to call with all newly created intermediate and the final packet. packetHandler is expected to take control of its argument.
+	\return true if interpolation was successful, false if it was not
+	\note The default implementation does nothing
+*/
+bool XsDevice::interpolateMissingData(XsDataPacket const & pack, XsDataPacket const & prev, std::function<void (XsDataPacket*)> packetHandler)
+{
+	(void) pack;
+	(void) prev;
+	(void) packetHandler;
+	return false;
+}
 /*! \endcond */
 
 /*! \brief Tell XDA and the device that any data from before \a firstNewPacketId may be lossy
@@ -4240,4 +4331,17 @@ XsDevice const* XsDevice::firstChild() const
 void XsDevice::discardRetransmissions(int64_t firstNewPacketId)
 {
 	(void) firstNewPacketId;
+}
+
+/*! \brief Returns a bitmask with all the status flags supported by this device
+	\details Not all devices support all status flags. When receiving an XsDataPacket with a status in it,
+	this can affect how to interpret the flags. Especially with a flag like the self-test it's important
+	not to conclude that a device is defective because it is not set when the device doesn't actually support
+	this feature.
+	\return The bitmask with all the status flags that this device supports
+*/
+uint32_t XsDevice::supportedStatusFlags() const
+{
+	// The basic device supports nothing
+	return (uint32_t) 0;
 }

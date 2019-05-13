@@ -44,10 +44,18 @@ class SimpleProtocolManager : public IProtocolManager
 public:
 	/*! \copydoc IProtocolManager::findMessage
 	*/
-	MessageLocation findMessage(XsMessage& rcv, const XsByteArray& raw) override
+	MessageLocation findMessage(XsProtocolType& type, const XsByteArray& raw) override
 	{
-		return m_protocolHandler.findMessage(rcv, raw);
-	}
+		return m_protocolHandler.findMessage(type, raw);
+	};
+
+	/*! \copydoc IProtocolManager::convertToMessage
+	*/
+	XsMessage convertToMessage(XsProtocolType& type, MessageLocation& location, const XsByteArray& raw) override
+	{
+		(void)type;
+		return m_protocolHandler.convertToMessage(location, raw);
+	};
 
 	/*! \copydoc IProtocolManager::validateMessage
 	*/

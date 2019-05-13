@@ -67,7 +67,7 @@ struct XsDeviceIdArray : public XsArrayImpl<XsDeviceId, g_xsDeviceIdArrayDescrip
 	}
 
 	//! \brief Constructs an XsDeviceIdArray that references the data supplied in \a ref
-	inline explicit XsDeviceIdArray(XsDeviceId* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsDeviceIdArray(XsDeviceId* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: ArrayImpl(ref, sz, flags)
 	{
 	}

@@ -40,7 +40,7 @@
 #include "xsdeviceconfiguration.h"
 #include "xsusbhubinfo.h"
 #include "xsscanner.h"
-#include <xstypes/xsens_debugtools.h>
+#include <xscommon/xsens_debugtools.h>
 #include <xscommon/xsens_janitors.h>
 #include "xsdevice_def.h"
 
@@ -146,7 +146,7 @@ XsString Communicator::lastResultText() const
 */
 XsSize Communicator::childDeviceCount() const
 {
-	return m_masterInfo ? m_masterInfo->deviceConfiguration().numberOfDevices() : 0;
+	return m_masterInfo ? m_masterInfo->deviceConfigurationConst().numberOfDevices() : 0;
 }
 
 /*! \brief Handles a \a message

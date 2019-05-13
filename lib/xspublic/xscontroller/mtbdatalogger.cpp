@@ -80,7 +80,7 @@ bool MtbDataLogger::create(const XsString &filename)
 
 	// check if we can actually write to the file
 	char testData[] = "Xsens";
-	XsByteArray test((unsigned char*) testData, 5);
+	XsByteArray test((unsigned char*) testData, 5, XSDF_None);
 
 	m_lastResult = m_ioInterfaceFile->writeData(test);
 	if (m_lastResult == XRV_OK)

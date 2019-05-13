@@ -58,11 +58,12 @@ MessageExtractor::MessageExtractor(std::shared_ptr<IProtocolManager> protocolMan
 
 /*! \brief Processes new incoming data for message extraction
 
+	\param devicePtr: %XsDevice pointer to call a onMessageDetected callback
 	\param newData: Buffer that contains the newly arrived data
 	\param messages: Newly extracted messages are stored in this vector. This vector will be cleared upon function entry
 	\returns XRV_OK if one or more messages were successfully extracted. Something else if not
 */
-XsResultValue MessageExtractor::processNewData(XsByteArray const& newData, std::deque<XsMessage> &messages)
+XsResultValue MessageExtractor::processNewData(XsDevice* devicePtr, XsByteArray const& newData, std::deque<XsMessage> &messages)
 {
 	if (!m_protocolManager)
 		return XRV_ERROR;
@@ -93,65 +94,80 @@ XsResultValue MessageExtractor::processNewData(XsByteArray const& newData, std::
 	{
 		assert(popped <= m_buffer.size());
 
-		XsByteArray raw(m_buffer.data() + popped, m_buffer.size() - popped);
-		XsMessage message;
+		XsByteArray raw(m_buffer.data() + popped, m_buffer.size() - popped, XSDF_None);
 
-		MessageLocation location = m_protocolManager->findMessage(message, raw);
+		XsProtocolType type;
+		MessageLocation location = m_protocolManager->findMessage(type, raw);
 
-		JLTRACEG("location valid: " << std::boolalpha << location.isValid() << ", looks sane: " << m_protocolManager->validateMessage(message));
-
-		if (location.isValid() && m_protocolManager->validateMessage(message))
+		if (location.isValid())
 		{
-			assert(location.m_startPos == -1 || location.m_incompletePos == -1 || location.m_incompletePos < location.m_startPos);
+			XsByteArray detectedMessage(&raw[location.m_startPos], location.m_size, XSDF_None);
+			if (devicePtr != nullptr)
+				devicePtr->onMessageDetected(type, detectedMessage);
 
-			if (location.m_startPos > 0)
+			XsMessage message = m_protocolManager->convertToMessage(type, location, raw);
+
+			if (location.isValid() && !message.empty() && m_protocolManager->validateMessage(message))
 			{
-				// We are going to skip something
-				if (location.m_incompletePos != -1)
+				assert(location.m_startPos == -1 || location.m_incompletePos == -1 || location.m_incompletePos < location.m_startPos);
+
+				if (location.m_startPos > 0)
 				{
-					// We are going to skip an incomplete but potentially valid message
-					// First wait a couple of times to see if we can complete that message before skipping
-					if (m_retryTimeout++ < m_maxIncompleteRetryCount)
+					// We are going to skip something
+					if (location.m_incompletePos != -1)
 					{
-						// wait a bit until we have more data
-						// but already pop the data that we know contains nothing useful
-						if (location.m_incompletePos > 0)
+						// We are going to skip an incomplete but potentially valid message
+						// First wait a couple of times to see if we can complete that message before skipping
+						if (m_retryTimeout++ < m_maxIncompleteRetryCount)
 						{
-							JLALERTG("Skipping " << location.m_incompletePos << " bytes from the input buffer");
-							popped += location.m_incompletePos;
+							// wait a bit until we have more data
+							// but already pop the data that we know contains nothing useful
+							if (location.m_incompletePos > 0)
+							{
+								JLALERTG("Skipping " << location.m_incompletePos << " bytes from the input buffer");
+								popped += location.m_incompletePos;
+							}
+
+							return retval();
 						}
-						return retval();
+						else
+						{
+							// We've waited a bit for the incomplete message to complete but it never completed
+							// So: We are going to skip an incomplete but potentially valid message
+							JLALERTG("Skipping " << location.m_startPos << " bytes from the input buffer that may contain an incomplete message at " << location.m_incompletePos
+								<< " found: " << (int)message.getTotalMessageSize()
+								<< std::hex << std::setfill('0')
+								<< " First bytes " << std::setw(2) << (int)message.getMessageStart()[0]
+								<< " " << std::setw(2) << (int)message.getMessageStart()[1]
+								<< " " << std::setw(2) << (int)message.getMessageStart()[2]
+								<< " " << std::setw(2) << (int)message.getMessageStart()[3]
+								<< " " << std::setw(2) << (int)message.getMessageStart()[4]
+								<< std::dec << std::setfill(' '));
+						}
 					}
 					else
 					{
-						// We've waited a bit for the incomplete message to complete but it never completed
-						// So: We are going to skip an incomplete but potentially valid message
-						JLALERTG("Skipping " << location.m_startPos << " bytes from the input buffer that may contain an incomplete message at " << location.m_incompletePos
-							<< " found: " << (int)message.getTotalMessageSize()
-							<< std::hex << std::setfill('0')
-							<< " First bytes " << std::setw(2) << (int)message.getMessageStart()[0]
-							<< " " << std::setw(2) << (int)message.getMessageStart()[1]
-							<< " " << std::setw(2) << (int)message.getMessageStart()[2]
-							<< " " << std::setw(2) << (int)message.getMessageStart()[3]
-							<< " " << std::setw(2) << (int)message.getMessageStart()[4]
-							<< std::dec << std::setfill(' '));
+						// We are going to skip something but we are not going to skip an incomplete but potentially valid message
+						JLALERTG("Skipping " << location.m_startPos << " bytes from the input buffer");
 					}
 				}
-				else
+				if (m_retryTimeout)
 				{
-					// We are going to skip something but we are not going to skip an incomplete but potentially valid message
-					JLALERTG("Skipping " << location.m_startPos << " bytes from the input buffer");
+					JLTRACEG("Resetting retry count from " << m_retryTimeout);
+					m_retryTimeout = 0;
 				}
-			}
-			if (m_retryTimeout)
-			{
-				JLTRACEG("Resetting retry count from " << m_retryTimeout);
-				m_retryTimeout = 0;
-			}
 
-			// message is valid, remove data from cache
-			popped += location.m_size + location.m_startPos;
-			messages.push_back(message);
+				// message is valid, remove data from cache
+				popped += location.m_size + location.m_startPos;
+				messages.push_back(message);
+			}
+			else
+			{
+				if (type == XPT_Nmea)
+					popped += location.m_size + location.m_startPos;
+				else
+					return retval();
+			}
 		}
 		else
 		{

@@ -82,7 +82,7 @@ XSCPPPROTECTED
 
 #ifdef __cplusplus
 	//! \brief Return the data management flags of the matrix.
-	inline XsSize flags() { return m_flags; }
+	inline XsSize flags() const { return m_flags; }
 public:
 	/*! \brief Initialize an XsMatrix object with the specified number of \a rows and \a cols */
 	inline explicit XsMatrix(XsSize rows = 0, XsSize cols = 0, XsSize strde = 0, const XsReal* dat = 0)
@@ -108,22 +108,22 @@ public:
 	}
 
 	/*! \brief Initialize an XsMatrix object that references the data passed in \a ref. \a rows, \a cols and \a stride can be used to specify the layout of the data */
-	inline explicit XsMatrix(XsReal* ref, XsSize rows, XsSize cols, XsSize stride, XsDataFlags flags = XSDF_None)
+	inline explicit XsMatrix(XsReal* ref, XsSize rows, XsSize cols, XsSize stride, XsDataFlags flags /* = XSDF_None */)
 		: m_data(ref)
 		, m_rows(rows)
 		, m_cols(cols)
 		, m_stride(stride)
-		, m_flags(flags)
+		, m_flags((XsSize) flags)
 	{
 	}
 
 	/*! \brief Initialize a copy of \a other in an XsMatrix object that references the data passed in \a ref. \a rows, \a cols and \a stride can be used to specify the layout of the data */
-	inline explicit XsMatrix(const XsMatrix& other, XsReal* ref, XsSize rows, XsSize cols, XsSize stride, XsDataFlags flags = XSDF_None)
+	inline explicit XsMatrix(const XsMatrix& other, XsReal* ref, XsSize rows, XsSize cols, XsSize stride, XsDataFlags flags /* = XSDF_None */)
 		: m_data(ref)
 		, m_rows(rows)
 		, m_cols(cols)
 		, m_stride(stride)
-		, m_flags(flags)
+		, m_flags((XsSize) flags)
 	{
 		XsMatrix_copy(this, &other);
 	}

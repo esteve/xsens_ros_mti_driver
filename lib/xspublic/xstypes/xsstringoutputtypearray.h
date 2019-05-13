@@ -30,25 +30,58 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef XSDEVICEIDLIST_H
-#define XSDEVICEIDLIST_H
+#ifndef XSSTRINGOUTPUTTYPEARRAY_H
+#define XSSTRINGOUTPUTTYPEARRAY_H
 
-#include "xsdeviceidarray.h"
+#include "xsstringoutputtype.h"
+#include "xsarray.h"
 
-#define XsDeviceIdList XsDeviceIdArray
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern XsArrayDescriptor const XSTYPES_DLL_API g_xsStringOutputTypeArrayDescriptor;
 
 #ifndef __cplusplus
-// obsolete:
-#define XSDEVICEIDLIST_INITIALIZER		XSDEVICEIDARRAY_INITIALIZER
-#define XsDeviceIdList_construct(thisPtr, sz, src)	XsDeviceIdArray_construct(thisPtr, sz, src)
-#define XsDeviceIdList_assign(thisPtr, sz, src)		XsArray_assign(thisPtr, sz, src)
-#define XsDeviceIdList_destruct(thisPtr)			XsArray_destruct(thisPtr)
-#define XsDeviceIdList_copy(thisPtr, copy)			XsArray_copy(copy, thisPtr)
-#define XsDeviceIdList_append(thisPtr, other)		XsArray_append(thisPtr, other)
-#define XsDeviceIdList_popFront(thisPtr, count)		XsArray_erase(thisPtr, 0, count)
-#define XsDeviceIdList_popBack(thisPtr, count)		XsArray_erase(thisPtr, (XsSize)-1, count)
-#define XsDeviceIdList_swap(a, b)					XsArray_swap(a, b)
-#define XsDeviceIdList_erase(thisPtr, index, count)	XsArray_erase(thisPtr, index, count)
+#define XSSTRINGOUTPUTTYPEARRAY_INITIALIZER	XSARRAY_INITIALIZER(&g_xsStringOutputTypeArrayDescriptor)
 
+XSARRAY_STRUCT(XsStringOutputTypeArray, XsStringOutputType);
+typedef struct XsStringOutputTypeArray XsStringOutputTypeArray;
+
+XSTYPES_DLL_API void XsStringOutputTypeArray_construct(XsStringOutputTypeArray* thisPtr, XsSize count, XsStringOutputType const* src);
+#else
+} // extern "C"
+#endif
+
+#ifdef __cplusplus
+struct XsStringOutputTypeArray : public XsArrayImpl<XsStringOutputType, g_xsStringOutputTypeArrayDescriptor, XsStringOutputTypeArray>
+{
+	//! \brief Constructs an XsStringOutputTypeArray
+	inline explicit XsStringOutputTypeArray(XsSize sz = 0, XsStringOutputType const* src = 0)
+		: ArrayImpl(sz, src)
+	{
+	}
+
+	//! \brief Constructs an XsStringOutputTypeArray as a copy of \a other
+	inline XsStringOutputTypeArray(XsStringOutputTypeArray const& other)
+		: ArrayImpl(other)
+	{
+	}
+
+	//! \brief Constructs an XsStringOutputTypeArray that references the data supplied in \a ref
+	inline explicit XsStringOutputTypeArray(XsStringOutputType* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
+		: ArrayImpl(ref, sz, flags)
+	{
+	}
+
+#ifndef XSENS_NOITERATOR
+	//! \brief Constructs an XsStringOutputTypeArray with the array bound by the supplied iterators \a beginIt and \a endIt
+	template <typename Iterator>
+	inline XsStringOutputTypeArray(Iterator beginIt, Iterator endIt)
+		: ArrayImpl(beginIt, endIt)
+	{
+	}
+#endif
+};
 #endif
 #endif

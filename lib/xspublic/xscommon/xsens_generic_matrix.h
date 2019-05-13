@@ -37,7 +37,7 @@
 
 #ifndef XSENS_MATH_FIRMWARE
 #	ifndef XSENS_EXCEPTION_H
-#		include "xsexception.h"
+#		include <xstypes/xsexception.h>
 #	endif
 #endif
 
@@ -53,11 +53,11 @@
 
 #ifndef XSENS_THROW_BAD_ALLOC
 #	ifdef XSENS_NO_EXCEPTIONS
-#       include <assert.h>
-#       define XSENS_THROW_BAD_ALLOC XM_THROW("Bad alloc")
-#   else
-#       define XSENS_THROW_BAD_ALLOC throw std::bad_alloc()
-#   endif
+#		include <assert.h>
+#		define XSENS_THROW_BAD_ALLOC XM_THROW("Bad alloc")
+#	else
+#		define XSENS_THROW_BAD_ALLOC throw std::bad_alloc()
+#	endif
 #endif
 
 #ifndef _PSTDINT_H_INCLUDED
@@ -320,7 +320,7 @@ T* GenericMatrix<T>::operator [] (const uint32_t row) const XSENS_GENERIC_MATRIX
 template <typename T>
 void GenericMatrix<T>::zeroValues()
 {
-	memset(m_data, 0, sizeof(T) * (size_t)m_rows*m_cols);
+	memset(static_cast<void*>(m_data), 0, sizeof(T) * (size_t)m_rows*m_cols);
 }
 
 template <typename T>

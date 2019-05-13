@@ -41,7 +41,7 @@
 #include "mtix00device.h"
 #include "mtigdevice.h"
 #include "mti7device.h"
-
+#include "mti6x0device.h"
 
 /*! \class DeviceFactory
 	\brief A Factory for the devices
@@ -91,7 +91,7 @@ bool DeviceFactory::registerStandaloneDeviceType(DeviceTypeId deviceTypeId, Stan
 */
 XsDevice* DeviceFactory::constructDevice(DeviceTypeId deviceTypeId, Communicator* comm)
 {
-	XsDevice* device = 0;
+	XsDevice* device = nullptr;
 	if (deviceTypeId != DeviceType::INVALID)
 	{
 		auto i = m_masterConstructors.find(deviceTypeId);
@@ -100,7 +100,8 @@ XsDevice* DeviceFactory::constructDevice(DeviceTypeId deviceTypeId, Communicator
 			device = (i->second)(*this, comm);
 			device->addRef();
 		}
-		else {
+		else
+		{
 			auto j = m_standaloneConstructors.find(deviceTypeId);
 			if (j != m_standaloneConstructors.end())
 			{
@@ -112,18 +113,18 @@ XsDevice* DeviceFactory::constructDevice(DeviceTypeId deviceTypeId, Communicator
 	return device;
 }
 
- /*! \brief Creates and initializes a master device with a specified communicator.
-	 The type of the new device is retrieved from the device id if the communicator.
-	 After construction the device will be initialized.
-	 \param[in] communicator The communicator, the function always takes ownership of this pointer
-	 \param[in] doInitialize If false, the device will not be initialized
-	 \returns the newly created device or null when the device was not created or could not be initialized
-	 \note the initializeDevice method should be overridden in derived classes.
-	 \note when a created device can not be initialized, it will be deleted again along with the supplied communicator
+	/*! \brief Creates and initializes a master device with a specified communicator.
+		The type of the new device is retrieved from the device id if the communicator.
+		After construction the device will be initialized.
+		\param[in] communicator The communicator, the function always takes ownership of this pointer
+		\param[in] doInitialize If false, the device will not be initialized
+		\returns the newly created device or null when the device was not created or could not be initialized
+		\note the initializeDevice method should be overridden in derived classes.
+		\note when a created device can not be initialized, it will be deleted again along with the supplied communicator
 */
 XsDevice* DeviceFactory::createMasterDevice(Communicator* communicator, bool doInitialize)
 {
-	if (communicator != 0)
+	if (communicator != nullptr)
 	{
 		DeviceTypeId deviceTypeId = deviceToTypeId(communicator->masterDeviceId());
 		XsDevice* constructedDevice = constructDevice(deviceTypeId, communicator);
@@ -159,6 +160,7 @@ DeviceFactory::DeviceTypeId DeviceFactory::deviceToTypeId(XsDeviceId const & dev
 		if (deviceId.isMtiX0()) return DeviceType::MTI_X0;
 		if (deviceId.isMtiX() && deviceId.isGnss()) return DeviceType::MTI_7;
 		if (deviceId.isMtiX()) return DeviceType::MTI_X;
+		if (deviceId.isMti6X0()) return DeviceType::MTI_6X0;
 	}
 
 	return DeviceType::INVALID;
@@ -173,10 +175,10 @@ void DeviceFactory::removeExistingDevice(const XsDeviceId &deviceId)
 }
 
 /*! \brief Initializes a device.
-  Calls initialize(m_loadedScenarioFile) on the device
-  \param[in] dev The device to initialize.
-  \returns true if initialization is successful.
-  */
+	Calls initialize(m_loadedScenarioFile) on the device
+	\param[in] dev The device to initialize.
+	\returns true if initialization is successful.
+	*/
 bool DeviceFactory::initializeDevice(XsDevice* dev) const
 {
 	if (dev && dev->initialize())
@@ -202,4 +204,5 @@ void DeviceFactory::registerDevices()
 	(void)registerStandaloneDeviceType(DeviceType::MTI_X00,			&MtiX00Device::constructStandalone);
 	(void)registerStandaloneDeviceType(DeviceType::MTIG,			&MtigDevice::constructStandalone);
 	(void)registerStandaloneDeviceType(DeviceType::MTI_7,			&Mti7Device::constructStandalone);
+	(void)registerStandaloneDeviceType(DeviceType::MTI_6X0,			&Mti6X0Device::constructStandalone);
 }

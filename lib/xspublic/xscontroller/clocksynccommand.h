@@ -30,50 +30,18 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef NMEA_IPARSER_H
-#define NMEA_IPARSER_H
+#ifndef CLOCKSYNCCOMMAND_H
+#define CLOCKSYNCCOMMAND_H
 
-#include "nmea_value.h"
-#include <utility>
-
-namespace nmea
+/*! \brief Clock synchronization commands
+	\details To be used in XMID_ClockSyncCommand and XMID_ClockSyncCommandAck messages
+*/
+enum ClockSyncCommand
 {
-
-class IParserObserver;
-
-
-class IParser
-{
-public:
-	typedef std::pair<bool, size_t> ParseResult;
-
-	virtual ~IParser() throw() {}
-
-	virtual ParseResult parseMessage(char const * begin, char const * end) const = 0;
-
-	virtual void attachObserver(IParserObserver&) = 0;
-	virtual void detachObserver(IParserObserver&) = 0;
-
-protected:
-	virtual void notifyHCHDM(DoubleValue heading) const = 0;
-	virtual void notifyHCHDG(DoubleValue heading,
-							 DoubleValue deviation, BoolValue positiveDeviation,
-							 DoubleValue variation, BoolValue positiveVariation) const = 0;
-	virtual void notifyPHTRO(DoubleValue pitch, BoolValue bowUp,
-							 DoubleValue roll, BoolValue portUp) const = 0;
-	virtual void notifyPRDID(DoubleValue pitch, DoubleValue roll, DoubleValue heading) const = 0;
-	virtual void notifyPSONCMS(DoubleValue quat1, DoubleValue quat2, DoubleValue quat3, DoubleValue quat4,
-							   DoubleValue acc_x, DoubleValue acc_y, DoubleValue acc_z,
-							   DoubleValue omega_x, DoubleValue omaga_y, DoubleValue omaga_z,
-							   DoubleValue mag_x, DoubleValue mag_y, DoubleValue mag_z,
-							   DoubleValue temperature) const = 0;
-	virtual void notifyHCMTW(DoubleValue temperature) const = 0;
-	virtual void notifyTSS2(DoubleValue heading, DoubleValue heave, DoubleValue roll, DoubleValue pitch) const = 0;
-	virtual void notifyEM1000(DoubleValue roll, DoubleValue pitch, DoubleValue heave, DoubleValue heading) const = 0;
-	virtual void notifyHEHDT(DoubleValue heading) const = 0;
-	virtual void notifyHEROT(DoubleValue rateOfTurn) const = 0;
+	CSC_Request			= 0x00,	//!< Command to request current clock value
+	CSC_SetPending		= 0x01, //!< Command to pend a new clock value
+	CSC_ConfirmPending	= 0x02	//!< Command to confirm/apply the pending new clock value
 };
-}
 
 #endif
 

@@ -30,51 +30,58 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef NMEA_COMMON_H
-#define NMEA_COMMON_H
+#include "xsens_math_throw.h"
 
-namespace nmea
+#ifndef __STDC_VERSION__
+#define __STDC_VERSION__	0
+#endif
+
+#if __STDC_VERSION__ >= 199901L
+#include <fenv.h>
+#endif
+
+namespace xsens
+{
+namespace DebugTools
 {
 
-class Common
+// please note that this will never be called in full release builds!
+void mathThrowBreakFunc()
 {
-protected:
-	static const unsigned int MAX_MESSAGE_IDENTIFIER_LENGTH = 10;
-
-	static const char PREAMBLE;
-	static const char PREAMBLE_TSS2;
-	static const char PREAMBLE_EM1000;
-	static const char COMMA;
-	static const char PLUS;
-	static const char MINUS;
-	static const char DECIMAL_POINT;
-	static const char CHECKSUM_MARKER;
-	static const char CR;
-	static const char LF;
-	static const char NMEA_TRUE;
-	static const char HCHDM_MAGNETIC;
-	static const char HCHDG_POSITIVE;
-	static const char HCHDG_NEGATIVE;
-	static const char PHTRO_BOW_UP;
-	static const char PHTRO_BOW_DOWN;
-	static const char PHTRO_PORT_UP;
-	static const char PHTRO_PORT_DOWN;
-	static const char HCMTW_CENTIGRADE;
-
-	static const char * const ID_HCHDM;
-	static const char * const ID_HCHDG;
-	static const char * const ID_PHTRO;
-	static const char * const ID_HCMTW;
-	static const char * const ID_PRDID;
-	static const char * const ID_PSONCMS;
-	static const char * const ID_TSS2;
-	static const char * const ID_EM1000;
-	static const char * const ID_HEHDT;
-	static const char * const ID_HEROT;
-
-	virtual ~Common() {}
-};
-
+	// volatile to prevent the function being optimized away
+	volatile int putMathBreakPointHere = 0;
+	(void)putMathBreakPointHere;
 }
 
-#endif	// file guard
+/*! \brief Enable floating point exceptions
+
+	On windows, this requires /fp:except for proper use.
+	It also needs implementation and a bit of testing.
+*/
+void enableFloatingPointExceptions()
+{
+#ifdef _MSC_VER
+//	_clearfp(); // always call _clearfp before enabling/unmasking a FPU exception
+//	_controlfp(_EM_INVALID | _EM_DENORMAL | _EM_ZERODIVIDE | _EM_OVERFLOW |
+//			 _EM_UNDERFLOW | _EM_INEXACT, _MCW_EM);
+#elif __STDC_VERSION__ >= 199901L
+	feenableexcept(FE_ALL_EXCEPT);
+#endif
+}
+
+/*! \brief Disable floating point exceptions
+
+	\see enableFloatingPointExceptions
+*/
+void disableFloatingPointExceptions()
+{
+#ifdef _MSC_VER
+//	_clearfp();
+//	_controlfp(_CW_DEFAULT, ~0);
+#elif __STDC_VERSION__ >= 199901L
+	feclearexcept(FE_ALL_EXCEPT);
+#endif
+}
+
+} // namespace DebugTools
+} // namespace xsens

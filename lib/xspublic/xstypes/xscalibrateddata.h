@@ -76,7 +76,7 @@ struct XsCalibratedData
 	{}
 
 	//! \brief Assignment operator, copies the values from \a other to this
-	inline const XsCalibratedData& operator = (const XsCalibratedData& other)
+	inline XsCalibratedData& operator = (const XsCalibratedData& other)
 	{
 		if (this != &other)
 		{

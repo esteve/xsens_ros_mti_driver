@@ -69,7 +69,7 @@ struct XsDevicePtrArray : public XsArrayImpl<XsDevicePtr, g_xsDevicePtrArrayDesc
 	}
 
 	//! \brief Constructs an XsDevicePtrArray that references the data supplied in \a ref
-	inline explicit XsDevicePtrArray(XsDevicePtr* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsDevicePtrArray(XsDevicePtr* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: ArrayImpl(ref, sz, flags)
 	{
 	}

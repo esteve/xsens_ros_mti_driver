@@ -66,7 +66,8 @@ public:
 
 	const_iterator begin() const;
 	const_iterator end() const;
-	MessageLocation findMessage(XsMessage& message, XsByteArray const & raw) override;
+	MessageLocation findMessage(XsProtocolType& type, const XsByteArray& raw) override;
+	XsMessage convertToMessage(XsProtocolType& type, MessageLocation& location, const XsByteArray& raw) override;
 	bool validateMessage(XsMessage const & message) const override;
 
 	/*! \brief Adds the protocol handler

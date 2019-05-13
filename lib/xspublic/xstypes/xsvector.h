@@ -81,7 +81,7 @@ XSCPPPROTECTED
 
 #ifdef __cplusplus
 								//! \brief Return the data management flags of the vector.
-	inline XsSize flags() { return m_flags; }
+	inline XsSize flags() const { return m_flags; }
 public:
 	//! \brief Initialize a vector, empty or using the data in the supplied \a sz and \a src
 	inline explicit XsVector(XsSize sz = 0, const XsReal* src = 0)
@@ -106,7 +106,7 @@ public:
 	inline explicit XsVector(XsReal* ref, XsSize sz, XsDataFlags flags_ = XSDF_None)
 		: m_data(ref)
 		, m_size(sz)
-		, m_flags(flags_)
+		, m_flags((XsSize) flags_)
 	{
 	}
 
@@ -114,7 +114,7 @@ public:
 	inline explicit XsVector(const XsVector& other, XsReal* ref, XsSize sz, XsDataFlags flags_ = XSDF_None)
 		: m_data(ref)
 		, m_size(sz)
-		, m_flags(flags_)
+		, m_flags((XsSize) flags_)
 	{
 		XsVector_copy(this, &other);
 	}

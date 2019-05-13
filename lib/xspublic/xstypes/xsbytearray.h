@@ -79,7 +79,7 @@ struct XsByteArray : public XsArrayImpl<uint8_t, g_xsByteArrayDescriptor, XsByte
 	}
 
 	//! \brief Constructs an XsByteArray that references the data supplied in \a ref
-	inline explicit XsByteArray(uint8_t* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsByteArray(uint8_t* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: ArrayImpl(ref, sz, flags)
 	{
 	}

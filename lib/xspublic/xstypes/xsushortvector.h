@@ -77,7 +77,7 @@ struct XsUShortVector {
 	}
 
 	//! \brief Assignment operator copies the data from the \a other vector to this vector
-	inline const XsUShortVector& operator = (const XsUShortVector& other)
+	inline XsUShortVector& operator = (const XsUShortVector& other)
 	{
 		if (this != &other)
 		{
@@ -103,7 +103,7 @@ struct XsUShortVector {
 	}
 
 	//! \brief Return a value from the vector (needed to allow generated C# access to these elements)
-	inline unsigned short at(int index)
+	inline unsigned short at(int index) const
 	{
 		return m_data[index];
 	}

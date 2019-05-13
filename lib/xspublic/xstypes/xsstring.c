@@ -154,12 +154,12 @@ void XsString_assignWCharArray(XsString* thisPtr, const wchar_t* src)
 		int required = WideCharToMultiByte(CP_UTF8, 0, src, unicodeLength, NULL, 0, NULL, NULL);
 		if (required != -1 && required > 0)
 		{
-			if (((XsSize)(unsigned int)required)+1 > thisPtr->m_reserved) {
-				XsArray_reserve(thisPtr, required+1);
-			}
+			XsSize reqv = (XsSize)(ptrdiff_t)required+1;
+			if (reqv > thisPtr->m_reserved)
+				XsArray_reserve(thisPtr, reqv);
 			WideCharToMultiByte(CP_UTF8, 0, src, unicodeLength, thisPtr->m_data, required+1, NULL, NULL);
 			thisPtr->m_data[required] = '\0';
-			*((XsSize*) &thisPtr->m_size) = required+1;
+			*((XsSize*) &thisPtr->m_size) = reqv;
 			return;
 		}
 #else
@@ -182,7 +182,7 @@ void XsString_assignWCharArray(XsString* thisPtr, const wchar_t* src)
 XsSize XsString_copyToWCharArray(const XsString* thisPtr, wchar_t* dest, XsSize size)
 {
 #ifdef WIN32
-	return MultiByteToWideChar(CP_UTF8, 0, thisPtr->m_data, (int) thisPtr->m_size, dest, (int) size);
+	return (XsSize)(ptrdiff_t) MultiByteToWideChar(CP_UTF8, 0, thisPtr->m_data, (int)(ptrdiff_t) thisPtr->m_size, dest, (int)(ptrdiff_t) size);
 #else
 	return mbstowcs(dest, thisPtr->m_data, size) + (dest?0:1);
 #endif
@@ -265,7 +265,7 @@ void XsString_push_back(XsString* thisPtr, char c)
 	thisPtr->m_data[sz-1] = c;
 }
 
-char const * advanceUtf8(char const *p)
+uint8_t const * advanceUtf8(const uint8_t* p)
 {
 	if ((*p & 0xC0) != 0xC0)
 		++p;
@@ -293,7 +293,7 @@ char const * advanceUtf8(char const *p)
 XsSize XsString_utf8Len(XsString const * thisPtr)
 {
 	XsSize count = 0;
-	char const * p = thisPtr->m_data;
+	uint8_t const * p = (uint8_t const*) thisPtr->m_data;
 
 	if (!thisPtr || !thisPtr->m_data)
 		return 0;
@@ -307,7 +307,7 @@ XsSize XsString_utf8Len(XsString const * thisPtr)
 }
 
 #ifndef XSENS_NO_WCHAR
-int32_t shiftUtf8(int32_t t, char const* p, int bytes)
+int32_t shiftUtf8(int32_t t, uint8_t const* p, int bytes)
 {
 	int i;
 	for (i = 0; i < bytes; ++i)
@@ -323,7 +323,7 @@ int32_t shiftUtf8(int32_t t, char const* p, int bytes)
 wchar_t XsString_utf8At(XsString const* thisPtr, XsSize index)
 {
 	int32_t t = 0;
-	char const * p = thisPtr->m_data;
+	uint8_t const * p = (uint8_t const*) thisPtr->m_data;
 
 	if (!thisPtr || !thisPtr->m_data)
 		return 0;

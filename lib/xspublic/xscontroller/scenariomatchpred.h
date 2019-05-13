@@ -35,7 +35,7 @@
 
 #include <xstypes/xstypesconfig.h>
 #include <string>
-#include "xsfilterprofile.h"
+#include <xstypes/xsfilterprofile.h>
 
 /*! \brief Returns true if \a lhs has the same type as \a rhs
 */

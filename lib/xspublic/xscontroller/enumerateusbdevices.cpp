@@ -110,7 +110,7 @@ static inline uint16_t pidFromDevPath(std::string const& devpath)
 	\returns False if an error occured during scanning.
 			 True if zero or more device found or no scan could be done	because both WINUSB and LIBUSB were not defined.
 */
-bool xsEnumerateUsbDevices(XsPortInfoList& ports)
+bool xsEnumerateUsbDevices(XsPortInfoArray& ports)
 {
 	XsPortInfo current;
 #ifdef USE_WINUSB

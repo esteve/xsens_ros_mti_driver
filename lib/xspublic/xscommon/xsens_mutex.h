@@ -138,6 +138,7 @@ namespace xsens {
 			if (pthread_mutex_trylock(&m_mutex) == 0)
 		#endif
 			{
+				++m_lockCount;
 				m_lockedBy = xsGetCurrentThreadId();
 				return true;
 			}
@@ -179,6 +180,11 @@ namespace xsens {
 		int m_readLockMax;
 		int m_readLockCount;
 		friend class LockReadWrite;
+		MutexReadWrite(MutexReadWrite const&) = delete;
+		MutexReadWrite& operator=(MutexReadWrite const&) = delete;
+		MutexReadWrite(MutexReadWrite &&) = delete;
+		MutexReadWrite& operator=(MutexReadWrite &&) = delete;
+
 	public:
 		inline MutexReadWrite()
 			: m_writeRef(0)
@@ -200,7 +206,7 @@ namespace xsens {
 			{
 				m_readLockMax = m_readLockMax*2;
 				XsThreadId* tmp = new XsThreadId[m_readLockMax];
-				memcpy(tmp, m_readLocked, m_readLockCount*sizeof(XsThreadId));
+				memcpy(tmp, m_readLocked, ((unsigned int) m_readLockCount)*sizeof(XsThreadId));
 				delete[] m_readLocked;
 				m_readLocked = tmp;
 			}
@@ -479,6 +485,10 @@ namespace xsens {
 		int m_readLockMax;
 		int m_readLockCount;
 		friend class LockSuspendable;
+		MutexReadWriteSuspendable(MutexReadWriteSuspendable const&) = delete;
+		MutexReadWriteSuspendable& operator=(MutexReadWriteSuspendable const&) = delete;
+		MutexReadWriteSuspendable(MutexReadWriteSuspendable &&) = delete;
+		MutexReadWriteSuspendable& operator=(MutexReadWriteSuspendable &&) = delete;
 	public:
 
 		/*! \brief An enum class that holds a three different modes of a suspendable mutex
@@ -512,7 +522,7 @@ namespace xsens {
 			{
 				m_readLockMax = m_readLockMax*2;
 				XsThreadId* tmp = new XsThreadId[m_readLockMax];
-				memcpy(tmp, m_readLocked, m_readLockCount*sizeof(XsThreadId));
+				memcpy(tmp, m_readLocked, ((unsigned int)m_readLockCount)*sizeof(XsThreadId));
 				delete[] m_readLocked;
 				m_readLocked = tmp;
 			}
@@ -575,6 +585,7 @@ namespace xsens {
 						return true;
 					}
 				}
+				break;
 
 			case Mode::Read:
 				while (1)
@@ -609,6 +620,7 @@ namespace xsens {
 					// wait for write lock to end
 					xsYield();
 				}
+				break;
 
 			case Mode::SuspendedWrite:
 				enterAtomic();
@@ -631,6 +643,10 @@ namespace xsens {
 						return true;
 					}
 				}
+				break;
+
+			default:
+				break;
 			}
 
 			assert(0);
@@ -843,6 +859,12 @@ namespace xsens {
 	private:
 		Mutex* m_mutex;
 		bool m_locked;
+
+		Lock(Lock const&) = delete;
+		Lock& operator=(Lock const&) = delete;
+		Lock(Lock &&) = delete;
+		Lock& operator=(Lock &&) = delete;
+
 	public:
 
 		/*! \brief Constructs a lock a given mutex
@@ -890,7 +912,7 @@ namespace xsens {
 		/*!	\brief Unlocks the locked mutex
 			\returns True if the mutex is successfully unlocked
 		*/
-		inline bool unlock()
+		inline bool unlock() noexcept
 		{
 			if (m_locked)
 			{
@@ -913,7 +935,7 @@ namespace xsens {
 		}
 
 		/*! \returns True if the mutex is locked*/
-		inline bool isLocked()
+		inline bool isLocked() const
 		{
 			return m_locked;
 		}
@@ -927,6 +949,11 @@ namespace xsens {
 		MutexReadWrite* m_mutex;
 		bool m_lockedR;
 		bool m_lockedW;
+
+		LockReadWrite(LockReadWrite const&) = delete;
+		LockReadWrite& operator=(LockReadWrite const&) = delete;
+		LockReadWrite(LockReadWrite &&) = delete;
+		LockReadWrite& operator=(LockReadWrite &&) = delete;
 	public:
 
 		/*! \brief Consturctor
@@ -1003,7 +1030,7 @@ namespace xsens {
 		/*! \brief Unlocks the write or read locked mutex
 			\returns True if the mutex is successfully unlocked. False if it was not locked.
 		*/
-		inline bool unlock()
+		inline bool unlock() noexcept
 		{
 			if (m_lockedW)
 			{
@@ -1081,6 +1108,12 @@ namespace xsens {
 		Mutex m_guarded;
 		friend class LockGuarded;
 		friend class LockSuspendable;
+
+		GuardedMutex(GuardedMutex const&) = delete;
+		GuardedMutex& operator=(GuardedMutex const&) = delete;
+		GuardedMutex(GuardedMutex &&) = delete;
+		GuardedMutex& operator=(GuardedMutex &&) = delete;
+
 	public:
 
 		/*! \brief Constructor
@@ -1095,7 +1128,7 @@ namespace xsens {
 		{
 		}
 
-		/*! \returns True if the mutex is claimed successfully
+		/*! \returns true if the mutex is claimed successfully
 		*/
 		inline bool claimMutex()
 		{
@@ -1103,7 +1136,7 @@ namespace xsens {
 			return m_guarded.claimMutex();
 		}
 
-		/*! \returns True if the mutex is released successfully
+		/*! \returns true if the mutex is released successfully
 		*/
 		inline bool releaseMutex()
 		{
@@ -1121,7 +1154,7 @@ namespace xsens {
 			\param mutex The supplied mutex
 			\returns True if it is equal
 		*/
-		inline bool isUsing(Mutex* mutex) const
+		inline bool isUsing(Mutex const* mutex) const
 		{
 			return &m_guarded == mutex;
 		}
@@ -1157,6 +1190,12 @@ namespace xsens {
 		bool m_lockedR;
 		bool m_lockedW;
 		bool m_iSuspended;	// Read: I suspended the write lock, this does not mean that it actually IS suspended
+
+		LockSuspendable(LockSuspendable const&) = delete;
+		LockSuspendable& operator=(LockSuspendable const&) = delete;
+		LockSuspendable(LockSuspendable &&) = delete;
+		LockSuspendable& operator=(LockSuspendable &&) = delete;
+
 	public:
 
 		/*! \brief Constructs a lock using a suspendable readers-writer mutex
@@ -1231,9 +1270,11 @@ namespace xsens {
 
 			case LS_Unlocked:
 				return unlock();
+
+			default:
+				assert(0);
+				return false;
 			}
-			assert(0);
-			return false;
 		}
 
 		/*! \brief Convenience function that accepts the boolean write value, forwards to lock(LockState)
@@ -1302,7 +1343,7 @@ namespace xsens {
 		/*! \brief Unlocks the write or read locked mutex
 			\returns True if the mutex is successfully unlocked. False if it was not locked.
 		*/
-		inline bool unlock()
+		inline bool unlock() noexcept
 		{
 			if (m_lockedW)
 			{
@@ -1340,7 +1381,7 @@ namespace xsens {
 			\param mutex The supplied suspendable readers-writer mutex
 			\returns True if it is equal
 		*/
-		bool isUsing(MutexReadWriteSuspendable* mutex) const
+		bool isUsing(MutexReadWriteSuspendable const* mutex) const
 		{
 			return m_mutex == mutex;
 		}
@@ -1349,7 +1390,7 @@ namespace xsens {
 		\param mutex The supplied guarded mutex
 		\returns True if it is equal
 		*/
-		bool isUsing(GuardedMutex* mutex) const
+		bool isUsing(GuardedMutex const* mutex) const
 		{
 			return m_mutex == mutex;
 		}
@@ -1362,6 +1403,12 @@ namespace xsens {
 	private:
 		GuardedMutex* m_mutex;
 		bool m_locked;
+
+		LockGuarded(LockGuarded const&) = delete;
+		LockGuarded& operator=(LockGuarded const&) = delete;
+		LockGuarded(LockGuarded &&) = delete;
+		LockGuarded& operator=(LockGuarded &&) = delete;
+
 	public:
 
 		/*! \brief Constructs a guarded lock using a guarded mutex
@@ -1400,7 +1447,7 @@ namespace xsens {
 		/*!	\brief Unlocks the locked mutex
 			\returns True if the mutex is successfully unlocked
 		*/
-		inline bool unlock()
+		inline bool unlock() noexcept
 		{
 			if (m_locked)
 			{
@@ -1423,7 +1470,7 @@ namespace xsens {
 			\param mutex The supplied guarded mutex
 			\returns True if it is equal
 		*/
-		bool isUsing(GuardedMutex* mutex) const
+		bool isUsing(GuardedMutex const* mutex) const
 		{
 			return m_mutex == mutex;
 		}
@@ -1432,7 +1479,7 @@ namespace xsens {
 			\param mutex The supplied suspendable readers-writer mutex
 			\returns True if it is equal
 		*/
-		bool isUsing(MutexReadWriteSuspendable* mutex) const
+		bool isUsing(MutexReadWriteSuspendable const* mutex) const
 		{
 			return m_mutex == mutex;
 		}
@@ -1441,7 +1488,7 @@ namespace xsens {
 			\param mutex The supplied generic mutex
 			\returns True if it is equal
 		*/
-		bool isUsing(Mutex* mutex) const
+		bool isUsing(Mutex const* mutex) const
 		{
 			return m_mutex->isUsing(mutex);
 		}
@@ -1510,6 +1557,12 @@ namespace xsens {
 		sem_t *m_handle;		//!< A semaphore's handle
 #endif
 		uint32_t m_nofHandles;	//!< A number of the semaphore's handles
+
+		Semaphore(Semaphore const&) = delete;
+		Semaphore& operator=(Semaphore const&) = delete;
+		Semaphore(Semaphore &&) = delete;
+		Semaphore& operator=(Semaphore &&) = delete;
+
 	public:
 
 		/*! \brief Waits for an infinite time or until the semaphore is released
@@ -1527,7 +1580,7 @@ namespace xsens {
 			\param increment The amount by which the semaphore object's current count is to be increased
 			\returns The amount of the semaphore object's previous count
 		*/
-		int32_t post(int32_t increment = 1) throw();
+		int32_t post(int32_t increment = 1) noexcept;
 #ifdef _WIN32
 		/*! \brief Constructor
 		*/
@@ -1584,6 +1637,11 @@ namespace xsens {
 	 */
 	class WaitCondition
 	{
+		WaitCondition(WaitCondition const&) = delete;
+		WaitCondition& operator=(WaitCondition const&) = delete;
+		WaitCondition(WaitCondition &&) = delete;
+		WaitCondition& operator=(WaitCondition &&) = delete;
+
 	public:
 		explicit WaitCondition(Mutex &m);
 		~WaitCondition();
@@ -1605,9 +1663,6 @@ namespace xsens {
 #endif
 #endif
 		Mutex &m_mutex;
-
-		// cannot be copied
-		WaitCondition(WaitCondition const& other);
 	};
 
 	/*! \brief An event that can be set/reset and that can be waited for
@@ -1615,6 +1670,11 @@ namespace xsens {
 	*/
 	class WaitEvent
 	{
+		WaitEvent(WaitEvent const&) = delete;
+		WaitEvent& operator=(WaitEvent const&) = delete;
+		WaitEvent(WaitEvent &&) = delete;
+		WaitEvent& operator=(WaitEvent &&) = delete;
+
 	public:
 		WaitEvent();
 		~WaitEvent();

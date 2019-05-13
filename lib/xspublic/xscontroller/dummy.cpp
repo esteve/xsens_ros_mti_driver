@@ -30,32 +30,9 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef XSNMEASTRINGTYPE_H
-#define XSNMEASTRINGTYPE_H
+// This exists just so the library isn't empty for the VS build
+#ifdef _WIN32
+#include <xscontroller.h>
+#endif
 
-/*!	\addtogroup enums Global enumerations
-	@{
-*/
-//! NMEA string types
-enum XsNmeaStringType {
-	 XNST_None		= 0x0000
-	,XNST_HCHDM		= 0x0001 //!< NMEA string with Magnetic Heading
-	,XNST_HCHDG		= 0x0002 //!< NMEA string with Heading and Magnetic Variation
-	,XNST_TSS2		= 0x0004 //!< Proprietry string with Heading, Heave, Roll and Pitch
-	,XNST_PHTRO		= 0x0008 //!< Proprietry NMEA string with Pitch and Roll
-	,XNST_PRDID		= 0x0010 //!< Proprietry NMEA string with Pitch, Roll and Heading
-	,XNST_EM1000	= 0x0020 //!< Binary format suitable for use with Simrad EM1000 mulitibeam sounders with Roll, Pitch, Heave and Heading
-	,XNST_PSONCMS	= 0x0040 //!< NMEA string with Xsens Compass Motion Sensor information
-	,XNST_HCMTW		= 0x0080 //!< NMEA string with (water) Temperature
-	,XNST_HEHDT		= 0x0100 //!< NMEA string with True Heading
-	,XNST_HEROT		= 0x0200 //!< NMEA string with Rate of Turn
-	,XNST_GPGGA		= 0x0400 //!< NMEA string with Global Positioning system fix data
-	,XNST_PTCF		= 0x0800 //!< NMEA string with motion data
-	,XNST_XSVEL		= 0x1000 //!< Proprietry NMEA string with velocity data
-	,XNST_GPZDA		= 0x2000 //!< NMEA string with date and time
-	,XNST_GPRMC		= 0x4000 //!< NMEA string with recommended minimum specific GPS/Transit data
-};
-/*! @} */
-typedef enum XsNmeaStringType XsNmeaStringType;
-
-#endif // file guard
+const int xsControllerDummy = 0;

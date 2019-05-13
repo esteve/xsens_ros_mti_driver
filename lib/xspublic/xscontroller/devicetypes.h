@@ -46,6 +46,7 @@ namespace DeviceType {
 	static const DeviceFactory::DeviceTypeId MTI_X00				= 22;
 	static const DeviceFactory::DeviceTypeId MTIG					= 23;
 	static const DeviceFactory::DeviceTypeId MTI_7					= 24;
+	static const DeviceFactory::DeviceTypeId MTI_6X0				= 25;
 	static const DeviceFactory::DeviceTypeId MTX2					= 30;
 	static const DeviceFactory::DeviceTypeId MTW2					= 80;
 	static const DeviceFactory::DeviceTypeId IMARIFOG				= 100;

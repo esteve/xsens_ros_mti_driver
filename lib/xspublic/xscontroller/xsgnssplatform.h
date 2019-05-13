@@ -40,7 +40,14 @@
 enum XsGnssPlatform
 {
 	XGP_Portable				= 0,
-	XGP_Airborne4g				= 8		//!< Airborne with <4g Acceleration
+	XGP_Stationary				= 2,
+	XGP_Pedestrian				= 3,
+	XGP_Automotive				= 4,
+	XGP_AtSea					= 5,
+	XGP_Airborne1g				= 6,
+	XGP_Airborne2g				= 7,
+	XGP_Airborne4g				= 8,	//!< Airborne with <4g Acceleration
+	XGP_Wrist					= 9
 };
 
 typedef enum XsGnssPlatform XsGnssPlatform;

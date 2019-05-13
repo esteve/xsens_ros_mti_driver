@@ -44,12 +44,12 @@
 #include <xstypes/xsresultvalue.h>
 #include <xstypes/xsmessage.h>
 #include <xscommon/xsens_mutex.h>
-#include "xsresetmethod.h"
+#include <xstypes/xsresetmethod.h>
 #include "devicefactory.h"
 #include "callbackmanagerxda.h"
 #include <xstypes/xsvector3.h>
 #include "lastresultmanager.h"
-#include "xsoption.h"
+#include <xstypes/xsoption.h>
 
 struct XSNOEXPORT Communicator;
 class XSNOEXPORT BroadcastDevice;
@@ -71,23 +71,23 @@ struct XsPortInfoArray;
 struct XsSyncSetting;
 struct XsDataPacket;
 struct XsMessage;
+struct XsFilterProfile;
 
 //AUTO enum XsResultValue;
 //AUTO enum XsBaud;
 //AUTO enum XsXbusMessageId;
 //AUTO struct XsDeviceIdArray;
-//AUTO struct XsIntList;
+//AUTO struct XsIntArray;
 //AUTO struct XsSyncSettingArray;
 //AUTO typename XsDevice;
 //AUTO enum XsFilePos;
+//AUTO struct XsFilterProfileArray;
+//AUTO enum XsOption;
 
 //AUTO }
 
 //AUTO namespace xscontroller {
-//AUTO struct XsFilterProfileArray;
-//AUTO enum XsOption;
 struct XsDeviceConfiguration;
-struct XsFilterProfile;
 struct XsDevicePtrArray;
 //AUTO }
 

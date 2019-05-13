@@ -33,9 +33,9 @@
 #ifndef XSFILTERPROFILE_H
 #define XSFILTERPROFILE_H
 
-#include "xscontrollerconfig.h"
-#include <xstypes/xsstring.h>
-#include <xstypes/pstdint.h>
+#include "xstypesconfig.h"
+#include "xsstring.h"
+#include "pstdint.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,9 +44,9 @@ extern "C" {
 #endif
 
 struct XsFilterProfile;
-XDA_DLL_API void XsFilterProfile_toString(struct XsFilterProfile* thisPtr, XsString *out);
-XDA_DLL_API int XsFilterProfile_empty(struct XsFilterProfile* thisPtr);
-XDA_DLL_API void XsFilterProfile_swap(struct XsFilterProfile* a, struct XsFilterProfile* b);
+XSTYPES_DLL_API void XsFilterProfile_toString(struct XsFilterProfile const* thisPtr, XsString *out);
+XSTYPES_DLL_API int XsFilterProfile_empty(struct XsFilterProfile const* thisPtr);
+XSTYPES_DLL_API void XsFilterProfile_swap(struct XsFilterProfile* a, struct XsFilterProfile* b);
 #ifdef __cplusplus
 }
 #endif

@@ -79,6 +79,8 @@ const char* XsResultValue_toString(XsResultValue result)
 	case XRV_INVALIDFILTERPROFILE:	return "Specified filter profile ID is not available on the device or the user is trying to duplicate an existing filter profile type";
 	case XRV_INVALIDSTOREDSETTINGS:	return "The settings stored in the device's non volatile memory are invalid";
 	case XRV_ACCESSDENIED:			return "Request for control of the device was denied";
+	case XRV_FILEERROR:				return "Failure reading, writing, opening or closing a file";
+	case XRV_OUTPUTCONFIGERROR:		return "Erroneous output configuration, device can not go to measurement";
 
 		// CMT / XDA / XME / etc
 	case XRV_ERROR:					return "Generic error";
@@ -139,6 +141,7 @@ const char* XsResultValue_toString(XsResultValue result)
 
 	case XRV_MEASUREMENTFAILED:		return "Failed to start measurement";
 	case XRV_STARTRECORDINGFAILED:	return "A device could not start recording";
+	case XRV_STOPRECORDINGFAILED:	return "A device could not stop recording";
 
 	case XRV_RADIO_CHANNEL_IN_USE:	return "Detected another system using the selected radio channel";
 	case XRV_UNEXPECTED_DISCONNECT:	return "Motion tracker disconnected unexpectedly";
@@ -150,6 +153,8 @@ const char* XsResultValue_toString(XsResultValue result)
 
 	case XRV_RESTORE_COMMUNICATION_FAILED:	return "Restore communication failed";
 	case XRV_RESTORE_COMMUNICATION_STOPPED:	return "Restore communication was stopped";
+
+	case XRV_EXPECTED_CONNECT:		return "The device connected";
 
 	case XRV_SHUTTINGDOWN:			return "The device is shutting down";
 	case XRV_GNSSCONFIGURATIONERROR:return "A configuration item was refused by the GNSS module";

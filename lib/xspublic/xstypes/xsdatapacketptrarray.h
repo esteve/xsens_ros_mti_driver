@@ -70,7 +70,7 @@ struct XsDataPacketPtrArray : public XsArrayImpl<XsDataPacketPtr, g_xsDataPacket
 	}
 
 	//! \brief Constructs an XsDataPacketPtrArray that references the data supplied in \a ref
-	inline explicit XsDataPacketPtrArray(XsDataPacketPtr* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsDataPacketPtrArray(XsDataPacketPtr* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: ArrayImpl(ref, sz, flags)
 	{
 	}

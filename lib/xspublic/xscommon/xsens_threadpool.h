@@ -81,8 +81,9 @@ private:
 	Mutex m_safe;
 	TaskId m_nextId;
 	bool m_suspended;
+	volatile std::atomic_bool m_terminating;
 
-	std::shared_ptr<PooledTask> findTask(unsigned int id);
+	std::shared_ptr<PooledTask> findTask(TaskId id);
 
 protected:
 	ThreadPool();
@@ -96,11 +97,12 @@ public:
 	bool doesTaskExist(TaskId id);
 	void cancelTask(TaskId id, bool wait = true);
 	void waitForCompletion(TaskId id);
-	void suspend(bool wait = false);
+	void suspend(bool wait = false) noexcept;
 	void resume();
 	unsigned int executedCount(unsigned int thread) const;
 	unsigned int completedCount(unsigned int thread) const;
 	unsigned int failedCount(unsigned int thread) const;
+	XsThreadId taskThreadId(TaskId id);
 
 	static ThreadPool* instance();
 	static void destroy();
@@ -122,6 +124,42 @@ private:
 	ThreadPool* m_pool;
 	std::list<unsigned int> m_waitList;
 };
+
+/*! \brief Task that will delete its object parameter
+	\details This class can be used to schedule a delete of a single object in the ThreadPool.
+	Normally you don't need to use this class directly, but can use the \ref deleteThreaded function.
+	\tparam T The type of the object to delete
+*/
+template <typename T>
+class ThreadPoolObjectDeleter : public ThreadPoolTask
+{
+	T* m_object;
+	ThreadPoolObjectDeleter(ThreadPoolObjectDeleter const&) = delete;
+	ThreadPoolObjectDeleter const& operator = (ThreadPoolObjectDeleter const&) = delete;
+public:
+	/*! \brief Constructor, creates the task to delete object a obj, but doesn't schedule it.
+	*/
+	ThreadPoolObjectDeleter(T* obj) : m_object(obj) {}
+	/*! \brief deletes the managed object */
+	bool exec() override
+	{
+		delete m_object;
+		return true;
+	}
+};
+
+/*! \brief Delete \a obj in the ThreadPool.
+	\details This function will schedule a task to be executed by the ThreadPool which will delete obj
+	\param obj The object to be deleted
+	\tparam T The type of the object to delete. Typically not required as the compiler should detect it automatically.
+	\return The task ID of the deletion task
+	\relates ThreadPoolObjectDeleter
+*/
+template <typename T>
+inline static ThreadPool::TaskId deleteThreaded(T* obj)
+{
+	return ThreadPool::instance()->addTask(new ThreadPoolObjectDeleter<T>(obj));
+}
 
 } // namespace xsens
 

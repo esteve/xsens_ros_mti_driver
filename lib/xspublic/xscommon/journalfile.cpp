@@ -36,6 +36,11 @@
 	\brief A class containing a journal file and some meta-data
 	\details These objects are managed by Journaller through gJournalFileMap.
 */
+
+/*! \var volatile std::atomic_int JournalFile::m_refCount
+	\brief A reference counter that tracks how many Journaller objects use this file
+*/
+
 /*! \brief Constructor, requires a filename
 	\details
 	\param name The (path and) filename of the log file to be used
@@ -46,9 +51,7 @@ JournalFile::JournalFile(const XsString& name, bool purge)
 	, m_filename(name)
 {
 	if (purge || (m_file.openText(name, false) != XRV_OK))
-	{
-		m_file.createText(name, true);
-	}
+		m_file.createText(name, false);
 	if (m_file.isOpen())
 		m_file.seek_r(0);
 }
@@ -56,11 +59,14 @@ JournalFile::JournalFile(const XsString& name, bool purge)
 /*! \brief Destructor, flushes remaining data and closes the file */
 JournalFile::~JournalFile()
 {
-	try {
+	try
+	{
 		flush();
 		m_file.close();
-	} catch(...)
-	{}
+	}
+	catch(...)
+	{
+	}
 }
 
 /*! \brief Flush remaining data to disk */
@@ -69,38 +75,40 @@ void JournalFile::flush()
 	m_file.flush();
 }
 
-/*! \brief Increase reference count of JournalFile with 1 */
-void JournalFile::addRef()
+/*! \brief Increase reference count of JournalFile by 1
+	\return The new ref count value
+*/
+int JournalFile::addRef()
 {
-	++m_refCount;
+	return ++m_refCount;
 }
 
-/*! \brief Increase reference count of JournalFile pointer */
-int JournalFile::refCount()
+/*! \brief Returns the current ref count value
+	\return The ref count value
+*/
+int JournalFile::refCount() volatile const
 {
-	return m_refCount;
+	return m_refCount.load();
 }
 
-/*! \brief Decrease reference count of JournalFile with 1 */
-void JournalFile::removeRef()
+/*! \brief Decrease reference count of JournalFile by 1
+	\return The new ref count value
+*/
+int JournalFile::removeRef()
 {
-	--m_refCount;
+	return --m_refCount;
 }
 
 /*! \brief Returns the (path +) filename of the open file */
-XsString JournalFile::filename()
+XsString JournalFile::filename() const
 {
 	return m_filename;
 }
 
 /*! \brief Appends \a msg to the end of the current data stream */
-JournalFile& JournalFile::operator<<(std::string& msg)
+JournalFile& JournalFile::operator<<(std::string const& msg)
 {
 	if (m_file.isOpen())
-		m_file.write(msg.c_str(), sizeof(char), msg.length());
+		m_file.write(msg.c_str(), (XsFilePos) sizeof(char), (XsFilePos) msg.length());
 	return *this;
 }
-
-/*! \var int JournalFile::m_refCount
-	\brief A reference counter that tracks how many Journaller objects use this file
-*/

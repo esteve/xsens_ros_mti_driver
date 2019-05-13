@@ -110,12 +110,11 @@ extern "C" {
 
 	XSTYPES_DLL_API void xsNameThisThread(const char* threadName);
 
-	#define xsGetCurrentThreadId()			GetCurrentThreadId()
-	#define xsGetCurrentThreadHandle()		GetCurrentThread()
-	#define xsSuspendThread(thrd)			SuspendThread(thrd)
-	#define xsResumeThread(thrd)			ResumeThread(thrd)
-	#define xsSetThreadPriority(thrd,prio)	SetThreadPriority(thrd,prio)
-	#define xsGetThreadPriority(thrd)		GetThreadPriority(thrd)
+	#define xsGetCurrentThreadId()				GetCurrentThreadId()
+	#define xsSuspendThread(thrd)				SuspendThread(thrd)
+	#define xsResumeThread(thrd)				ResumeThread(thrd)
+	#define xsSetThreadPriority(thrd,prio)		SetThreadPriority(thrd,prio)
+	#define xsGetThreadPriority(thrd)			GetThreadPriority(thrd)
 
 #else
 #include <pthread.h>

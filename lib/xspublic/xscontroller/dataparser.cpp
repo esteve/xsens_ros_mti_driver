@@ -126,13 +126,17 @@ void DataParser::clear()
 		m_incoming.pop();
 }
 
+void DataParser::signalStopThread(void)
+{
+	StandardThread::signalStopThread();
+	m_newDataEvent.terminate();
+}
+
 /*! \brief Terminates the thread
 */
 void DataParser::terminate()
 {
 	JLDEBUGG("Thread " << this << " type: " << m_parserType);
-	signalStopThread();
-	m_newDataEvent.terminate();
 	stopThread();
 	clear();
 }

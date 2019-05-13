@@ -64,6 +64,8 @@ int compareFilterProfile(XsFilterProfile const* a, XsFilterProfile const* b)
 {
 	if (a->m_filterType != b->m_filterType)
 		return (a->m_filterType < b->m_filterType)?-1:1;
+	if (a->m_type != b->m_type)
+		return (a->m_type < b->m_type)?-1:1;
 	if (a->m_filterMajor != b->m_filterMajor)
 		return (a->m_filterMajor < b->m_filterMajor)?-1:1;
 	if (a->m_filterMinor != b->m_filterMinor)

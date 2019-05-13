@@ -84,12 +84,21 @@
 #endif
 
 #ifdef __GNUC__
-#include <limits.h>
-#if __WORDSIZE == 64
-#	define XSENS_64BIT
+#	include <limits.h>
+#	if __WORDSIZE == 64
+#		define XSENS_64BIT
+#	else
+#		define XSENS_32BIT
+#	endif
+#	ifndef XSENS_PFSHARED
+#		define XSENS_PFSHARED ".so"
+#		define XSENS_PFPRE	  "lib"
+#	endif
 #else
-#	define XSENS_32BIT
-#endif
+#	ifndef XSENS_PFSHARED
+#		define XSENS_PFSHARED ".dll"
+#		define XSENS_PFPRE	  ""
+#	endif
 #endif
 
 #if defined(_WIN64) || defined(_M_X64) || defined(_M_IA64)
@@ -105,9 +114,23 @@
 #	ifndef WIN64
 #		define WIN64
 #	endif
+#	ifndef XSENS_PFBITS
+#		ifdef __GNUC__
+#			define XSENS_PFBITS ""
+#		else
+#			define XSENS_PFBITS	"64"
+#		endif
+#	endif
 #else
 #	ifndef XSENS_32BIT
 #		define XSENS_32BIT
+#	endif
+#	ifndef XSENS_PFBITS
+#		ifdef __GNUC__
+#			define XSENS_PFBITS ""
+#		else
+#			define XSENS_PFBITS	"32"
+#		endif
 #	endif
 #endif
 
@@ -151,12 +174,26 @@ The common way to setup configuration-dependent defines:
 			#define QT_DEBUG	1
 		#endif
 		#define XSENS_CONFIG	0
+		#ifndef XSENS_PFCONF
+			#ifdef __GNUC__
+				#define XSENS_PFCONF	""
+			#else
+				#define XSENS_PFCONF	"d"
+			#endif
+		#endif
 	#else
 		//// RelWithDeb build
 		#if !defined(QT_DEBUG) && !defined(QT_NO_DEBUG)
 			#define QT_NO_DEBUG	1
 		#endif
 		#define XSENS_CONFIG	1
+		#ifndef XSENS_PFCONF
+			#ifdef __GNUC__
+				#define XSENS_PFCONF	""
+			#else
+				#define XSENS_PFCONF	"rd"
+			#endif
+		#endif
 	#endif
 #else
 	//// Release build
@@ -169,6 +206,13 @@ The common way to setup configuration-dependent defines:
 			#define NDEBUG		// make sure assertions and other debug options are compiled away by MSVC
 		#endif
 	#endif
+	#ifndef XSENS_PFCONF
+		#define XSENS_PFCONF	""
+	#endif
+#endif
+
+#ifndef XSENS_PFFULL
+	#define XSENS_PFFULL	XSENS_PFBITS XSENS_PFCONF
 #endif
 
 //////////////////////////////////////////////////

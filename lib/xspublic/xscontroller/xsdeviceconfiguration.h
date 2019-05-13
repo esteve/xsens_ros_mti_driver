@@ -68,9 +68,8 @@ XDA_DLL_API XsSize XsDeviceConfiguration_findDevice(const struct XsDeviceConfigu
 
 /*! \brief %Device information for MT devices in an XsDeviceConfiguration. */
 struct XsMtDeviceConfiguration {
-	uint32_t	m_deviceId;			/*!< \brief This device ID */
-	uint16_t	m_dataLength;			/*!< \brief The total length of the data */
-	uint16_t	m_outputMode;			/*!< \brief The legacy output mode \sa XsOutputMode */
+	uint64_t	m_deviceId;				/*!< \brief This device ID */
+	uint8_t		m_reserved[8];			/*!< \brief Reserved space */
 	uint16_t	m_filterProfile;		/*!< \brief The currently chosen filter profile */
 	uint8_t		m_fwRevMajor;			/*!< \brief The major version of the firmware */
 	uint8_t		m_fwRevMinor;			/*!< \brief The minor version of the firmware */
@@ -84,16 +83,13 @@ typedef struct XsMtDeviceConfiguration XsMtDeviceConfiguration;
 
 /*! \brief Device information for the main device in an XsDeviceConfiguration. */
 struct XsMasterDeviceConfiguration {
-	uint32_t		m_masterDeviceId;	/*!< \brief The master device ID */
+	uint64_t		m_masterDeviceId;	/*!< \brief The master device ID */
 	uint16_t		m_samplingPeriod;	/*!< \brief The sampling period */
 	uint16_t		m_outputSkipFactor;	/*!< \brief The output skip factor */
-	uint16_t		m_syncInMode;		/*!< \brief The sync-in mode */
-	uint16_t		m_syncInSkipFactor;	/*!< \brief The sync-in skip factor */
-	uint32_t		m_syncInOffset;		/*!< \brief The sync-in offset */
+	uint8_t			m_reserved1[8];		/*!< \brief Reserved space */
 	uint8_t			m_date[8];		/*!< \brief The date */
 	uint8_t			m_time[8];		/*!< \brief The time */
-	uint8_t			m_reservedForHost[32];	/*!< \brief Reserved space */
-	uint8_t			m_reservedForClient[32];/*!< \brief Reserved space */
+	uint8_t			m_reserved2[64];	/*!< \brief Reserved space */
 };
 typedef struct XsMasterDeviceConfiguration XsMasterDeviceConfiguration;
 
@@ -112,9 +108,9 @@ struct XsDeviceConfiguration {
 #ifdef __cplusplus
 	/*! \brief Constructor
 
-	  \param numberOfDevs : The number of devices for which memory should be allocated in the XsDeviceConfiguration
+		\param numberOfDevs : The number of devices for which memory should be allocated in the XsDeviceConfiguration
 
-	  \sa XsDeviceConfiguration_construct
+		\sa XsDeviceConfiguration_construct
 	*/
 	explicit XsDeviceConfiguration(uint16_t numberOfDevs = 0)
 		: m_numberOfDevices(0)
@@ -126,9 +122,9 @@ struct XsDeviceConfiguration {
 	}
 
 	/*! \brief Copy constructor
-	  \param other the object to copy
-	  \sa XsDeviceConfiguration_copy
-	 */
+		\param other the object to copy
+		\sa XsDeviceConfiguration_copy
+		*/
 	XsDeviceConfiguration(const XsDeviceConfiguration& other)
 		: m_numberOfDevices(0)
 		, m_deviceInfo(0)
@@ -139,11 +135,11 @@ struct XsDeviceConfiguration {
 
 	/*! \brief Assign \a other to this device configuaration
 
-	  \param other the object to copy
+		\param other the object to copy
 
-	  \returns a const reference to this object
-	  \sa XsDeviceConfiguration_copy
-	 */
+		\returns a const reference to this object
+		\sa XsDeviceConfiguration_copy
+		*/
 	inline const XsDeviceConfiguration& operator = (const XsDeviceConfiguration& other)
 	{
 		if (this != &other)
@@ -164,7 +160,7 @@ struct XsDeviceConfiguration {
 	}
 
 	/*! \brief Test if this object is empty
-	  \returns true if this object is empty
+		\returns true if this object is empty
 	*/
 	inline bool empty() const
 	{
@@ -173,10 +169,10 @@ struct XsDeviceConfiguration {
 
 	/*! \brief \copybrief XsDeviceConfiguration_readFromMessage
 
-	   \param msg the message to read the device configuration from
+		\param msg the message to read the device configuration from
 
-	   \sa XsDeviceConfiguration_readFromMessage
-	 */
+		\sa XsDeviceConfiguration_readFromMessage
+		*/
 	inline void readFromMessage(const XsMessage &msg)
 	{
 		XsDeviceConfiguration_readFromMessage(this, &msg);
@@ -184,10 +180,10 @@ struct XsDeviceConfiguration {
 
 	/*! \brief \copybrief XsDeviceConfiguration_writeToMessage
 
-	   \param msg the message to write the device configuration to
+		\param msg the message to write the device configuration to
 
-	   \sa XsDeviceConfiguration_writeToMessage
-	 */
+		\sa XsDeviceConfiguration_writeToMessage
+		*/
 	inline void writeToMessage(XsMessage& msg) const
 	{
 		XsDeviceConfiguration_writeToMessage(this, &msg);
@@ -195,8 +191,8 @@ struct XsDeviceConfiguration {
 
 	/*! \brief Return true if this contains device info for \a deviceId
 
-	  \param deviceId the device ID to find in this configuration
-	  \returns true if the device is present in the configuration
+		\param deviceId the device ID to find in this configuration
+		\returns true if the device is present in the configuration
 	*/
 	inline bool containsDevice(const XsDeviceId& deviceId)
 	{
@@ -204,8 +200,21 @@ struct XsDeviceConfiguration {
 	}
 
 	/*! \brief The deviceInfo for the \a deviceId
-	  \param deviceId the device ID to identify with
-	  \returns the deviceInfo structure for \a deviceId
+		\param deviceId the device ID to identify with
+		\returns the deviceInfo structure for \a deviceId
+	*/
+	inline XsMtDeviceConfiguration const& deviceInfo(const XsDeviceId& deviceId) const
+	{
+		XsSize busId = XsDeviceConfiguration_findDevice(this, &deviceId);
+		if (busId == 0)
+			throw XsDeviceConfigurationException();
+
+		return deviceInfo(busId);
+	}
+
+	/*! \brief The deviceInfo for the \a deviceId
+		\param deviceId the device ID to identify with
+		\returns the deviceInfo structure for \a deviceId
 	*/
 	inline XsMtDeviceConfiguration& deviceInfo(const XsDeviceId& deviceId)
 	{
@@ -218,9 +227,9 @@ struct XsDeviceConfiguration {
 
 	/*! \brief The device info for the device at \a busId
 
-	  \param busId the bus ID of the device for which to return data for
+		\param busId the bus ID of the device for which to return data for
 
-	  \returns a reference to the device configuration for the device at \a busId
+		\returns a reference to the device configuration for the device at \a busId
 	*/
 	inline XsMtDeviceConfiguration& deviceInfo(XsSize busId)
 	{
@@ -238,9 +247,9 @@ struct XsDeviceConfiguration {
 
 	/*! \brief The device info for the device at \a busId
 
-	  \param busId the bus ID of the device for which to return data for
+		\param busId the bus ID of the device for which to return data for
 
-	  \returns a const reference to the device configuration for the device at \a busId
+		\returns a const reference to the device configuration for the device at \a busId
 	*/
 	inline const XsMtDeviceConfiguration& deviceInfo(XsSize busId) const
 	{
@@ -259,7 +268,7 @@ struct XsDeviceConfiguration {
 
 	/*! \brief The device info for the master device
 
-	  \returns a reference to the device configuration for the master device
+		\returns a reference to the device configuration for the master device
 	*/
 	inline XsMasterDeviceConfiguration& masterInfo()
 	{
@@ -268,7 +277,7 @@ struct XsDeviceConfiguration {
 
 	/*! \brief The device info for the master device
 
-	  \returns a const reference to the device configuration for the master device
+		\returns a const reference to the device configuration for the master device
 	*/
 	inline const XsMasterDeviceConfiguration& masterInfo() const
 	{
@@ -276,23 +285,23 @@ struct XsDeviceConfiguration {
 	}
 
 	/*! \brief Set the number of devices to \a count
-	  \param count the new number of devices to allocate for
-	 */
+		\param count the new number of devices to allocate for
+		*/
 	inline void setNumberOfDevices(XsSize count)
 	{
 		XsDeviceConfiguration_assign(this, count, 0);
 	}
 
 	/*! \brief The current number of devices
-	  \returns the number of devices
-	 */
+		\returns the number of devices
+		*/
 	inline XsSize numberOfDevices() const
 	{
 		return (XsSize) m_numberOfDevices;
 	}
 
 	/*! \brief \copybrief numberOfDevices
-	  \copydetails numberOfDevices
+		\copydetails numberOfDevices
 	*/
 	inline XsSize deviceCount() const
 	{

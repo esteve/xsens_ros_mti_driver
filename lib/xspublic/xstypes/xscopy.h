@@ -60,6 +60,6 @@
 
 #define XSLISTSWAP2(C, B)	XSLISTSWAP3(C, B, C##_swap)
 
-#define XSLISTSWAP(C)	XSLISTSWAP2(C, C##List)
+#define XSLISTSWAP(C)	XSLISTSWAP2(C, C##Array)
 
 #endif

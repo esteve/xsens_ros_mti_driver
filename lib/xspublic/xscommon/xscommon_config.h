@@ -30,60 +30,25 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef XSFILTERPROFILEARRAY_H
-#define XSFILTERPROFILEARRAY_H
+#define XSNOEXPORT
+#define XSENS_NO_AUTOLIB
+// include this file in Visual Studio using C/C++->Advanced->Force Includes (the /FI option)
+#ifndef CONFIG_H
+#define CONFIG_H
 
-#include "xscontrollerconfig.h"
-#include <xstypes/xsarray.h>
-
-#ifdef __cplusplus
-#include "xsfilterprofile.h"
-extern "C" {
+#ifndef UNICODE
+#define UNICODE
+#endif
+#ifndef _UNICODE
+#define _UNICODE
 #endif
 
-extern XsArrayDescriptor const XDA_DLL_API g_xsFilterProfileArrayDescriptor;
+#include <xstypes/xstypesconfig.h>
 
-#ifndef __cplusplus
-#define XSFILTERPROFILEARRAY_INITIALIZER	XSARRAY_INITIALIZER(&g_xsFilterProfileArrayDescriptor)
+//////////////////////////////////////////////////
+// generic preprocessor defines
 
-struct XsFilterProfile;
+//! Set to 0 to disable threading support (ie for in an embedded environment), 1 is enabled
+#define JOURNALLER_WITH_THREAD_SUPPORT		1
 
-XSARRAY_STRUCT(XsFilterProfileArray, struct XsFilterProfile);
-typedef struct XsFilterProfileArray XsFilterProfileArray;
-
-XDA_DLL_API void XsFilterProfileArray_construct(XsFilterProfileArray* thisPtr, XsSize count, struct XsFilterProfile const* src);
-#else
-} // extern "C"
-#endif
-
-#ifdef __cplusplus
-struct XsFilterProfileArray : public XsArrayImpl<XsFilterProfile, g_xsFilterProfileArrayDescriptor, XsFilterProfileArray> {
-	//! \brief Constructs an XsFilterProfileArray
-	inline explicit XsFilterProfileArray(XsSize sz = 0, XsFilterProfile const* src = 0)
-		 : ArrayImpl(sz, src)
-	{
-	}
-
-	//! \brief Constructs an XsFilterProfileArray as a copy of \a other
-	inline XsFilterProfileArray(XsFilterProfileArray const& other)
-		 : ArrayImpl(other)
-	{
-	}
-
-	//! \brief Constructs an XsFilterProfileArray that references the data supplied in \a ref
-	inline explicit XsFilterProfileArray(XsFilterProfile* ref, XsSize sz, XsDataFlags flags = XSDF_None)
-		: ArrayImpl(ref, sz, flags)
-	{
-	}
-
-#ifndef XSENS_NOITERATOR
-	//! \brief Constructs an XsFilterProfileArray with the array bound by the supplied iterators \a beginIt and \a endIt
-	template <typename Iterator>
-	inline XsFilterProfileArray(Iterator beginIt, Iterator endIt)
-		: ArrayImpl(beginIt, endIt)
-	{
-	}
-#endif
-};
-#endif
 #endif

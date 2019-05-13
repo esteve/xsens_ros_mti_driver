@@ -43,7 +43,8 @@ public:
 	ProtocolHandler();
 	virtual ~ProtocolHandler();
 
-	MessageLocation findMessage(XsMessage& rcv, const XsByteArray& raw) const override;
+	MessageLocation findMessage(XsProtocolType& type, const XsByteArray& raw) const override;
+	XsMessage convertToMessage(MessageLocation& location, const XsByteArray& raw) const override;
 	int minimumMessageSize() const override;
 	int maximumMessageSize() const override;
 	int type() const override;

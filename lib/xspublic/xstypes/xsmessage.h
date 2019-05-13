@@ -223,7 +223,7 @@ struct XsMessage {
 		auto tonibble = [](char a) -> uint8_t
 		{
 			if (a >= '0' && a <= '9')
-				return (uint8_t) a-'0';
+				return (uint8_t) (a-'0');
 			if (a >= 'a' && a <= 'f')
 				return (uint8_t) (10+a-'a');
 			if (a >= 'A' && a <= 'F')
@@ -231,7 +231,7 @@ struct XsMessage {
 			return 0;
 		};
 		for (XsSize i = 0; i < szm; ++i)
-			tmp[i] = tonibble(source[i*2])*16+tonibble(source[i*2+1]);
+			tmp[i] = tonibble(source[i*2])*(uint8_t)16+tonibble(source[i*2+1]);	//lint !e734
 		XsMessage_load(this, tmp.size(), tmp.data());
 		if (computeChecksum)
 			XsMessage_recomputeChecksum(this);
@@ -358,9 +358,11 @@ struct XsMessage {
 	inline XsResultValue toResultValue(void) const
 	{
 		const XsMessageHeader* hdr = XsMessage_getConstHeader(this);
-		if (!hdr || (hdr->m_messageId == 0 && hdr->m_busId == XS_BID_MASTER))
+		if (!hdr)
 			return XRV_NULLPTR;
-		if (hdr->m_messageId != XMID_Error)
+		if (hdr->m_messageId == 0 && hdr->m_busId == XS_BID_MASTER)
+			return XRV_TIMEOUTNODATA;	// we assume that an empty message indicates a timeout
+		if ((XsXbusMessageId) hdr->m_messageId != XMID_Error)
 			return XRV_OK;
 		return (XsResultValue) getDataByte();
 	}
@@ -395,6 +397,7 @@ struct XsMessage {
 	*/
 	bool loadFromString(const uint8_t* src, XsSize msgSize)
 	{
+		XsArray_destruct(&m_message);
 		XsMessage_load(this, msgSize, src);
 		return isChecksumOk();
 	}
@@ -589,7 +592,7 @@ struct XsMessage {
 	{
 		(void) id;
 		for (int i = 0; i < numValues; ++i)
-			XsMessage_getEndianCorrectData(this, &data[i], sizeof(T), offset+i*sizeof(T));
+			XsMessage_getEndianCorrectData(this, &data[i], sizeof(T), offset+((unsigned int)i)*sizeof(T));
 	}
 
 	/*! \brief Write data of type T to the message
@@ -604,7 +607,7 @@ struct XsMessage {
 	{
 		(void) id;
 		for (int i = 0; i < numValues; ++i)
-			XsMessage_setEndianCorrectData(this, &data[i], sizeof(T), offset+i*sizeof(T));
+			XsMessage_setEndianCorrectData(this, &data[i], sizeof(T), offset+((unsigned int)i)*sizeof(T));
 	}
 
 	/*! \brief Return the number of bytes that \a numValues items of type T will require in a message
@@ -616,7 +619,7 @@ struct XsMessage {
 	static int sizeInMsg(XsDataIdentifier id, int numValues = 1)
 	{
 		(void) id;
-		return numValues * sizeof(T);
+		return numValues * (int) sizeof(T);
 	}
 
 private:
@@ -625,9 +628,9 @@ private:
 	{
 		XsSize sz = XsMessage_getTotalMessageSize(this);
 		if (sz)
-			*((uint8_t**) &m_checksum) = &m_message[sz-1];
+			*const_cast<uint8_t**>(&m_checksum) = &m_message[sz-1];
 		else
-			*((uint8_t**) &m_checksum) = 0;
+			*const_cast<uint8_t**>(&m_checksum) = 0;
 	}
 
 #endif
@@ -649,7 +652,7 @@ private:
 template <>
 inline void XsMessage::getData<double>(double* data, XsDataIdentifier id, XsSize offset, int numValues) const
 {
-	getDataFPValue(id, data, offset, numValues);
+	getDataFPValue(id, data, offset, (XsSize)(ptrdiff_t)numValues);
 }
 
 /*! \brief Write 'real' data from the message
@@ -663,7 +666,7 @@ inline void XsMessage::getData<double>(double* data, XsDataIdentifier id, XsSize
 template <>
 inline void XsMessage::setData<double>(double const* data, XsDataIdentifier id, XsSize offset, int numValues)
 {
-	setDataFPValue(id, data, offset, numValues);
+	setDataFPValue(id, data, offset, (XsSize)(ptrdiff_t)numValues);
 }
 
 /*! \brief Return the number of bytes that \a numValues 'real' items will require in a message

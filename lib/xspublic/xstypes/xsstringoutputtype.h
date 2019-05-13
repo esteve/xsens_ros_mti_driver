@@ -30,26 +30,32 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef XSINTLIST_H
-#define XSINTLIST_H
+#ifndef XSSTRINGOUTPUTTYPE_H
+#define XSSTRINGOUTPUTTYPE_H
 
-#include "xsintarray.h"
+/*!	\addtogroup enums Global enumerations
+	@{
+*/
+//! String output types
+enum XsStringOutputType {
+	 XSOT_None		= 0x0000
+	,XSOT_HCHDM		= 0x0001 //!< NMEA string with Magnetic Heading
+	,XSOT_HCHDG		= 0x0002 //!< NMEA string with Heading and Magnetic Variation
+	,XSOT_TSS2		= 0x0004 //!< Proprietry string with Heading, Heave, Roll and Pitch
+	,XSOT_PHTRO		= 0x0008 //!< Proprietry NMEA string with Pitch and Roll
+	,XSOT_PRDID		= 0x0010 //!< Proprietry NMEA string with Pitch, Roll and Heading
+	,XSOT_EM1000	= 0x0020 //!< Binary format suitable for use with Simrad EM1000 mulitibeam sounders with Roll, Pitch, Heave and Heading
+	,XSOT_PSONCMS	= 0x0040 //!< NMEA string with Xsens Compass Motion Sensor information
+	,XSOT_HCMTW		= 0x0080 //!< NMEA string with (water) Temperature
+	,XSOT_HEHDT		= 0x0100 //!< NMEA string with True Heading
+	,XSOT_HEROT		= 0x0200 //!< NMEA string with Rate of Turn
+	,XSOT_GPGGA		= 0x0400 //!< NMEA string with Global Positioning system fix data
+	,XSOT_PTCF		= 0x0800 //!< NMEA string with motion data
+	,XSOT_XSVEL		= 0x1000 //!< Proprietry NMEA string with velocity data
+	,XSOT_GPZDA		= 0x2000 //!< NMEA string with date and time
+	,XSOT_GPRMC		= 0x4000 //!< NMEA string with recommended minimum specific GPS/Transit data
+};
+/*! @} */
+typedef enum XsStringOutputType XsStringOutputType;
 
-#define XsIntList	XsIntArray
-
-#ifndef __cplusplus
-// obsolete:
-#define XSINTLIST_INITIALIZER		XsIntArray_INITIALIZER
-#define XsIntList_construct(thisPtr, sz, src)	XsIntArray_construct(thisPtr, sz, src)
-#define XsIntList_assign(thisPtr, sz, src)		XsArray_assign(thisPtr, sz, src)
-#define XsIntList_destruct(thisPtr)				XsArray_destruct(thisPtr)
-#define XsIntList_copy(thisPtr, copy)			XsArray_copy(copy, thisPtr)
-#define XsIntList_append(thisPtr, other)		XsArray_append(thisPtr, other)
-#define XsIntList_popFront(thisPtr, count)		XsArray_erase(thisPtr, 0, count)
-#define XsIntList_popBack(thisPtr, count)		XsArray_erase(thisPtr, (XsSize)-1, count)
-#define XsIntList_swap(a, b)					XsArray_swap(a, b)
-#define XsIntList_erase(thisPtr, index, count)	XsArray_erase(thisPtr, index, count)
-#define XsIntList_find(thisPtr, needle)			XsArray_find(thisPtr, needle)
-
-#endif
 #endif

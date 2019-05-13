@@ -35,6 +35,7 @@
 
 #include <xstypes/xsmessage.h>
 #include "messagelocation.h"
+#include "xsprotocoltype.h"
 
 /*! \brief Interface class for protocol manager
 \details Describes the interfaces of a manager of different protocols \sa ProtocolHandler
@@ -46,12 +47,20 @@ public:
 	//! \brief Destructor
 	virtual ~IProtocolManager() {}
 
-	/*! \brief Will let all supported protocols attempt finding a message in the given raw data
-		\param rcv: If a message has been found it will be stored in this input variable
+	/*! \brief Will let all supported protocols attempt finding a raw message in the given raw data
+		\param type: The protocol type to us
 		\param raw: The input raw byte array in which to look for a message
 		\returns A MessageLocation object describing the best possible found message \sa MessageLocation
 	*/
-	virtual MessageLocation findMessage(XsMessage& rcv, const XsByteArray& raw) = 0;
+	virtual MessageLocation findMessage(XsProtocolType& type, const XsByteArray& raw) = 0;
+
+	/*! \brief Converts \a raw data using \a location into a %XsMessage object.
+		\param type: The protocol type to use.
+		\param location: The location of a message to convert from \a raw data.
+		\param raw: The raw byte stream.
+		\returns A %XsMessage object that was converted from raw byte stream.
+	*/
+	virtual XsMessage convertToMessage(XsProtocolType& type, MessageLocation& location, const XsByteArray& raw) = 0;
 
 	/*! \brief Performs a sanity check on the given message
 		\param msg: The message to check

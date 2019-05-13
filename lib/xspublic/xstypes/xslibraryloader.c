@@ -41,10 +41,10 @@
 
 /*! \brief Dynamically load a library
 
-  \param[in,out] thisp the XsLibraryLoader object handle
-  \param[in] libraryName the name of the library to load. The library
+	\param[in,out] thisp the XsLibraryLoader object handle
+	\param[in] libraryName the name of the library to load. The library
 		should be present in the current search path, or be specified by a path
-  \return non-zero if the library could be loaded, zero otherwise
+	\return non-zero if the library could be loaded, zero otherwise
 */
 int XsLibraryLoader_load(XsLibraryLoader* thisp, const XsString* libraryName)
 {
@@ -71,9 +71,9 @@ int XsLibraryLoader_load(XsLibraryLoader* thisp, const XsString* libraryName)
 
 /*! \brief Resolve a function from the library
 
-  \param[in] thisp the library handle
-  \param[in] functionName the name of the function
-  \return a pointer to the resolved function, may be NULL if no function could be resolved
+	\param[in] thisp the library handle
+	\param[in] functionName the name of the function
+	\return a pointer to the resolved function, may be NULL if no function could be resolved
 */
 void* XsLibraryLoader_resolve(const XsLibraryLoader* thisp, const char* functionName)
 {
@@ -89,8 +89,8 @@ void* XsLibraryLoader_resolve(const XsLibraryLoader* thisp, const char* function
 
 /*! \brief Unload the loaded library
 
-  \param[in,out] thisp the library handle
-  \return zero on failure, non-zero otherwise
+	\param[in,out] thisp the library handle
+	\return zero on failure, non-zero otherwise
 */
 int XsLibraryLoader_unload(XsLibraryLoader* thisp)
 {
@@ -109,8 +109,8 @@ int XsLibraryLoader_unload(XsLibraryLoader* thisp)
 
 /*! \brief Check if a library is loaded
 
-  \param[in] thisp the library handle
-  \return zero if nothing is loaded, non-zero otherwise
+	\param[in] thisp the library handle
+	\return zero if nothing is loaded, non-zero otherwise
 */
 int XsLibraryLoader_isLoaded(const XsLibraryLoader* thisp)
 {
@@ -118,7 +118,7 @@ int XsLibraryLoader_isLoaded(const XsLibraryLoader* thisp)
 }
 
 /*! \brief Get an error string after a failure occurred
-  \param[in,out] error the string to fill with the result error
+	\param[in,out] error the string to fill with the result error
 */
 void XsLibraryLoader_getErrorString(XsString* error)
 {

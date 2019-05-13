@@ -54,7 +54,6 @@ namespace xsens {
 
 typedef std::map<unsigned int, std::shared_ptr<PooledTask>> TaskSet;
 typedef std::set<PooledThread*> ThreadSet;
-typedef std::deque<std::shared_ptr<PooledTask>> TaskQueue;
 typedef std::vector<std::shared_ptr<PooledTask>> TaskList;
 
 /*! \brief Returns the number of processor cores in the current system
@@ -100,11 +99,13 @@ public:
 	ThreadPoolTask* m_task;		//!< The task that is to be executed
 	unsigned int m_id;			//!< The id that was assigned to the task by the ThreadPool
 	std::vector<std::shared_ptr<PooledTask>> m_dependentTasks;	//!< A list of tasks that are waiting for this task to complete
+	XsThreadId m_threadId;
 	volatile std::atomic<bool> m_canceling;
 
 	PooledTask()
 		: m_task(nullptr)
 		, m_id(0)
+		, m_threadId(0)
 		, m_canceling(false)
 		, m_completed(false)
 		, m_completedMutex()
@@ -132,7 +133,7 @@ public:
 		return m_completed;
 	}
 
-	void signalCompleted()
+	void signalCompleted() noexcept
 	{
 		Lock locker(&m_completedMutex);
 		if (!m_completed)
@@ -144,7 +145,7 @@ public:
 	}
 
 private:
-	bool m_completed;
+	volatile std::atomic_bool m_completed;
 	Mutex m_completedMutex;
 	WaitCondition m_completedCondition;
 };
@@ -195,7 +196,8 @@ protected:
 
 /*! \brief Constructor */
 PooledThread::PooledThread(ThreadPool* pool)
-	: m_pool(pool)
+	: StandardThread()
+	, m_pool(pool)
 	, m_task(nullptr)
 	, m_executed(0)
 	, m_completed(0)
@@ -206,6 +208,8 @@ PooledThread::PooledThread(ThreadPool* pool)
 /*! \brief Destructor */
 PooledThread::~PooledThread()
 {
+	stopThread();
+	m_pool = nullptr;
 }
 
 /*! \brief The inner function of the pooled thread.
@@ -220,8 +224,10 @@ int32_t PooledThread::innerFunction(void)
 
 	while (m_task && !isTerminating())
 	{
+		m_task->m_threadId = getThreadId();
 		bool complete = false;
-		try {
+		try
+		{
 			if (m_task->m_task->exec())
 			{
 				++m_completed;
@@ -262,7 +268,10 @@ int32_t PooledThread::innerFunction(void)
 		if (complete)
 			m_pool->reportTaskComplete(m_task);
 		else
+		{
+			m_task->m_threadId = 0;
 			m_pool->reportTaskPaused(m_task);
+		}
 
 		m_task = m_pool->getNextTask();
 	}
@@ -318,6 +327,7 @@ unsigned int PooledThread::failedCount() const
 ThreadPool::ThreadPool()
 	: m_nextId(1)
 	, m_suspended(false)
+	, m_terminating(false)
 {
 	setPoolSize(0);
 }
@@ -326,6 +336,7 @@ ThreadPool::ThreadPool()
 */
 ThreadPool::~ThreadPool()
 {
+	m_terminating = true;
 	suspend(true);
 
 	// all threads should now be idle
@@ -334,8 +345,15 @@ ThreadPool::~ThreadPool()
 	m_executing.clear();
 	m_delaying.clear();
 
-	for (ThreadSet::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
-		delete *it;
+	try
+	{
+		for (ThreadSet::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
+			delete *it;
+	}
+	catch(...)
+	{
+		// nothing much we can do about this...
+	}
 }
 
 /*! \brief Add a task to be executed by the threadpool
@@ -346,6 +364,7 @@ ThreadPool::~ThreadPool()
 */
 ThreadPool::TaskId ThreadPool::addTask(ThreadPoolTask* task, ThreadPool::TaskId afterId)
 {
+	assert(!m_terminating);
 	std::shared_ptr<PooledTask> tmp(new PooledTask);
 	tmp->m_task = task;
 	Lock safety(&m_safe);
@@ -391,7 +410,7 @@ unsigned int ThreadPool::count()
 */
 void ThreadPool::setPoolSize(unsigned int poolsize)
 {
-	if (poolsize <= 0)
+	if (poolsize == 0)
 	{
 		//int pc = processorCount();
 		//poolsize = ::std::max(4, pc*2);
@@ -461,6 +480,17 @@ std::shared_ptr<PooledTask> ThreadPool::findTask(ThreadPool::TaskId id)
 	return std::shared_ptr<PooledTask>();
 }
 
+/*! \brief Find an XsThread with the specified \a id
+*/
+XsThreadId ThreadPool::taskThreadId(TaskId id)
+{
+	Lock safety(&m_safe);
+	TaskSet::iterator it = m_executing.find(id);
+	if (it != m_executing.end())
+		return it->second->m_threadId;
+	return 0;
+}
+
 /*! \brief Check if a task with the supplied \a id exists
 */
 bool ThreadPool::doesTaskExist(ThreadPool::TaskId id)
@@ -498,9 +528,7 @@ void ThreadPool::waitForCompletion(ThreadPool::TaskId id)
 {
 	std::shared_ptr<PooledTask> task = findTask(id);
 	if (task != nullptr)
-	{
-		(void) task->waitForCompletion();
-	}
+		task->waitForCompletion();
 }
 
 /*! \brief Called by PooledThread to notify the ThreadPool that a task was completed
@@ -586,7 +614,7 @@ void ThreadPool::reportTaskPaused(std::shared_ptr<PooledTask> task)
 	\param wait When set to true the function waits for all threads to finish their current task
 	\sa resume
 */
-void ThreadPool::suspend(bool wait)
+void ThreadPool::suspend(bool wait) noexcept
 {
 	Lock safety(&m_safe);
 	m_suspended = true;

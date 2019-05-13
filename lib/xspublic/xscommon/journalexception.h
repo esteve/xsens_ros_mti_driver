@@ -45,7 +45,7 @@
 
 class JournalException : public XsException {
 public:
-	JournalException(std::string message);
+	JournalException(std::string const& message);
 	~JournalException() throw() {}
 
 	const char *msg() const;

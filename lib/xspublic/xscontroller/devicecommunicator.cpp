@@ -101,7 +101,7 @@ bool DeviceCommunicator::doTransaction(const XsMessage &msg, XsMessage &rcv, uin
 	else
 	{
 		setLastResult(XRV_TIMEOUT);
-		JLALERTG("Failed to write message because of timeout: " << timeout << " ms.");
+		JLALERTG("Failed to write message " << msg.getMessageId() << " because of timeout: " << timeout << " ms.");
 	}
 
 	return false;
@@ -140,12 +140,29 @@ XsResultValue DeviceCommunicator::getDeviceId()
 	XsMessage snd(XMID_ReqDid);
 	snd.setBusId(XS_BID_MASTER);
 
-	XsMessage rcv;
-	if (!doTransaction(snd, rcv))
+	XsMessage rcv_did;
+	if (!doTransaction(snd, rcv_did))
 		return setAndReturnLastResult(XRV_COULDNOTREADSETTINGS);
+	uint64_t deviceId = rcv_did.getDataLong();
+	if (rcv_did.getDataSize() == 8)
+		deviceId = rcv_did.getDataLongLong();
 
-	setMasterDeviceId(rcv.getDataLong());
-	return setAndReturnLastResult(XRV_OK);
+	XsMessage rcv_pdc;
+	XsString productCode;
+	snd.setMessageId(XMID_ReqProductCode);
+	if (doTransaction(snd, rcv_pdc))
+	{
+		const char* pc = (const char*) rcv_pdc.getDataBuffer();
+		std::string result(pc?pc:"", 20);
+		std::string::size_type thingy = result.find(" ");
+		if (thingy < 20)
+			result.erase(result.begin() + (unsigned)thingy, result.end());
+		productCode = result;
+	}
+
+	setMasterDeviceId(XsDeviceId(productCode.c_str(), 0, 0, deviceId));
+
+	return XRV_OK;
 }
 
 /*! \copybrief Communicator::gotoConfig
@@ -155,6 +172,7 @@ XsResultValue DeviceCommunicator::gotoConfig(bool)
 	XsMessage snd(XMID_GotoConfig);
 	snd.setBusId(XS_BID_MASTER);
 
+	JLDEBUGG("Sending gotoConfig");
 	if (!doTransaction(snd, gotoConfigTimeout()))
 		return setAndReturnLastResult(XRV_CONFIGCHECKFAIL);
 	return setAndReturnLastResult(XRV_OK);
@@ -230,7 +248,7 @@ XsResultValue DeviceCommunicator::extractMessages(const XsByteArray &rawIn, std:
 
 	assert(protocolManager());
 
-	XsResultValue res = m_messageExtractors[channel].processNewData(rawIn, messages);
+	XsResultValue res = m_messageExtractors[channel].processNewData(masterDevice(), rawIn, messages);
 
 	if (res == XRV_OK)
 	{

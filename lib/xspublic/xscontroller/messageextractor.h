@@ -37,6 +37,7 @@
 #include <xstypes/xsmessage.h>
 #include <deque>
 #include <memory>
+#include "xsdevice_def.h"
 #include "iprotocolmanager.h"
 
 class MessageExtractor
@@ -44,7 +45,8 @@ class MessageExtractor
 public:
 	MessageExtractor(std::shared_ptr<IProtocolManager> protocolManager);
 
-	XsResultValue processNewData(XsByteArray const& newData, std::deque<XsMessage> &messages);
+	XsResultValue processNewData(XsDevice* devicePtr, XsByteArray const& newData, std::deque<XsMessage> &messages);
+
 	void clearBuffer();
 	int setMaxIncompleteRetryCount(int max);
 

@@ -156,7 +156,10 @@ int64_t PacketStamper::calculateLargeSampleTime(int64_t frameTime, int64_t lastT
 /*! \brief Estimate the time of sampling for the supplied packet \a pack and update it */
 void PacketStamper::estimateTos(XsDataPacket& pack)
 {
-	pack.setEstimatedTimeOfSampling(estimateTosInternal(pack.packetId(), pack.timeOfArrival().msTime()));
+	if (pack.containsSampleTime64())
+		pack.setEstimatedTimeOfSampling(XsTimeStamp((int64_t) pack.sampleTime64()));
+	else
+		pack.setEstimatedTimeOfSampling(estimateTosInternal(pack.packetId(), pack.timeOfArrival().msTime()));
 }
 
 /*! \brief Estimate the clock parameters based on the available data points

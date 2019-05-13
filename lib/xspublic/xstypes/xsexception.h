@@ -46,7 +46,8 @@ class XsException : public std::exception {
 public:
 	//! \brief Copy constructor
 	XsException(XsException const& e)
-		: m_code(e.m_code)
+		: std::exception()
+		, m_code(e.m_code)
 		, m_description(e.m_description)
 	{
 	}
@@ -60,7 +61,8 @@ public:
 		\param prefix Whether to prefix the description with a textual description of the error code or not (default is yes)
 	*/
 	XsException(XsResultValue err, XsString const& description, bool prefix = true)
-		: m_code(err)
+		: std::exception()
+		, m_code(err)
 		, m_description(description)
 	{
 		if (prefix && (m_code != XRV_OK))
@@ -74,7 +76,7 @@ public:
 				rv << ". ";
 				rv.append(m_description);
 			}
-			m_description = rv;
+			m_description.swap(rv);
 		}
 	}
 
@@ -82,45 +84,49 @@ public:
 		\param description A description of the error.
 	*/
 	explicit XsException(XsString const& description)
-		: m_code(XRV_ERROR)
+		: std::exception()
+		, m_code(XRV_ERROR)
 		, m_description(description)
 	{
 	}
 
 	//! \brief Destructor
-	virtual ~XsException() throw()
+	virtual ~XsException() noexcept
 	{
 	}
 
 	//! \brief Assignment operator, copies \a e to this
 	XsException& operator = (XsException const& e)
 	{
-		m_code = e.m_code;
-		m_description = e.m_description;
+		if (this != &e)
+		{
+			m_code = e.m_code;
+			m_description = e.m_description;
+		}
 		return *this;
 	}
 
 	//! \brief Returns the error value supplied during construction
-	inline XsResultValue code() const throw()
+	inline XsResultValue code() const noexcept
 	{
 		return m_code;
 	}
 
 	//! \brief Returns a description of the error that occurred as a char const*
-	inline char const* what() const throw()
+	inline char const* what() const noexcept
 	{
 		return m_description.c_str();
 	}
 
 	//! \brief Returns a description of the error that occurred as a XsString
-	inline XsString const& text() const throw()
+	inline XsString const& text() const noexcept
 	{
 		return m_description;
 	}
 
 private:
 	XsResultValue m_code;	//!< The supplied error code
-	XsString m_description;	//!< The supplied description, prefixed with a description of the error code
+	XsString m_description;	//!< The supplied description, possibly prefixed with a description of the error code
 };
 
 #endif

@@ -44,19 +44,19 @@ extern "C" {
 #define XSDEVICEID_PRODUCT_CODE_INIT	"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
 
 #ifndef __cplusplus
-#define XSDEVICEID_INITIALIZER	{ 0, 0, XSDEVICEID_PRODUCT_CODE_INIT, 0, 0 }
+#define XSDEVICEID_INITIALIZER	{ 0, XSDEVICEID_PRODUCT_CODE_INIT, 0, 0 }
 #endif
 
 struct XsDeviceId;
 
 XSTYPES_DLL_API int XsDeviceId_isLegacyDeviceId(struct XsDeviceId const* thisPtr);
-XSTYPES_DLL_API int XsDeviceId_legacyBit(struct XsDeviceId const* thisPtr);
-
+XSTYPES_DLL_API uint64_t XsDeviceId_legacyBit(struct XsDeviceId const* thisPtr);
 XSTYPES_DLL_API int XsDeviceId_isMtiX(struct XsDeviceId const* thisPtr);
 XSTYPES_DLL_API int XsDeviceId_isMtiX0(struct XsDeviceId const* thisPtr);
 XSTYPES_DLL_API int XsDeviceId_isMtiX00(struct XsDeviceId const* thisPtr);
 XSTYPES_DLL_API int XsDeviceId_isMtigX00(struct XsDeviceId const* thisPtr);
 XSTYPES_DLL_API int XsDeviceId_isMtigX10(struct XsDeviceId const* thisPtr);
+XSTYPES_DLL_API int XsDeviceId_isMti6X0(struct XsDeviceId const* thisPtr);
 XSTYPES_DLL_API int XsDeviceId_isMtw(struct XsDeviceId const* thisPtr);
 XSTYPES_DLL_API int XsDeviceId_isMtw2(struct XsDeviceId const* thisPtr);
 XSTYPES_DLL_API int XsDeviceId_isMtx(struct XsDeviceId const* thisPtr);
@@ -144,24 +144,9 @@ XSTYPES_DLL_API int XsDeviceId_isMtMk5_710(struct XsDeviceId const* thisPtr);
 
 struct XsDeviceId {
 #ifdef __cplusplus
-	/*! \brief Constructor that creates an XsDeviceId from the supplied \a deviceId */
-	inline XsDeviceId(uint64_t serialNumber = 0)
-		: m_deviceId(0)
-		, m_serialNumber(serialNumber)
-		//, m_productCode(XSDEVICEID_PRODUCT_CODE_INIT)
-		, m_hardwareVersion(0)
-		, m_productVariant(0)
-	{
-		m_productCode[0]= 0;
-		if (isLegacyDeviceId())
-			m_deviceId = (uint32_t)m_serialNumber;
-	}
-
 	/*! \brief Constructor that creates an XsDeviceId from the supplied \a productcode, \a hardwareVersion, \a productVariant and \a serialNumber*/
 	inline XsDeviceId(const char* productCode, uint16_t hardwareVersion, uint32_t productVariant, uint64_t serialNumber)
-		: m_deviceId(0)
-		, m_serialNumber(serialNumber)
-		//, m_productCode(XSDEVICEID_PRODUCT_CODE_INIT)
+		: m_deviceId(serialNumber)
 		, m_hardwareVersion(hardwareVersion)
 		, m_productVariant(productVariant)
 	{
@@ -170,11 +155,18 @@ struct XsDeviceId {
 			strcpy(m_productCode, productCode);
 	}
 
+	/*! \brief Constructor that creates an XsDeviceId from the supplied \a deviceId */
+	inline XsDeviceId(uint64_t serialNumber = 0)
+		: m_deviceId(serialNumber)
+		, m_hardwareVersion(0)
+		, m_productVariant(0)
+	{
+		m_productCode[0]= 0;
+	}
+
 	/*! \brief Constructor that creates an XsDeviceId from the supplied XsDeviceId \a other */
 	inline XsDeviceId(const XsDeviceId& other)
 		: m_deviceId(other.m_deviceId)
-		, m_serialNumber(other.m_serialNumber)
-		//, m_productCode(XSDEVICEID_PRODUCT_CODE_INIT)
 		, m_hardwareVersion(other.m_hardwareVersion)
 		, m_productVariant(other.m_productVariant)
 	{
@@ -188,28 +180,15 @@ struct XsDeviceId {
 		if (this != &other)
 		{
 			m_deviceId = other.m_deviceId;
-			m_serialNumber = other.m_serialNumber;
 			memcpy(m_productCode, other.m_productCode, XSDEVICEID_PRODUCT_CODE_LEN);
 			m_hardwareVersion = other.m_hardwareVersion;
 			m_productVariant = other.m_productVariant;
 		}
 		return *this;
 	}
-	/*! \brief Assign the \a serialNumber to this XsDeviceId, clears the other fields */
-	inline const XsDeviceId& operator=(uint64_t serialNumber)
-	{
-		m_serialNumber = serialNumber;
-		m_productCode[0]= 0;
-		m_hardwareVersion = 0;
-		m_productVariant = 0;
-		if (isLegacyDeviceId())
-			m_deviceId = (uint32_t)m_serialNumber;
-		else
-			m_deviceId = 0;
-		return *this;
-	}
+
 	/*! \brief \copybrief XsDeviceId_legacyBit(const struct XsDeviceId*) */
-	inline uint32_t legacyBit() const
+	inline uint64_t legacyBit() const
 	{
 		return XsDeviceId_legacyBit(this);
 	}
@@ -221,12 +200,12 @@ struct XsDeviceId {
 	/*! \brief Returns the device serial number as an unsigned integer */
 	inline uint64_t toInt() const
 	{
-		return m_deviceId ? m_deviceId : m_serialNumber;
+		return m_deviceId;
 	}
 	/*! \brief Returns the 32-bit device serial number, which may be 0 if the device has a 64-bit serial number */
 	inline uint32_t legacyDeviceId() const
 	{
-		return m_deviceId;
+		return static_cast<uint32_t>(m_deviceId);
 	}
 	/*! \brief \copybrief XsDeviceId_isMtiX(const struct XsDeviceId*) */
 	inline bool isMtiX() const
@@ -252,6 +231,11 @@ struct XsDeviceId {
 	inline bool isMtigX10() const
 	{
 		return 0 != XsDeviceId_isMtigX10(this);
+	}
+	/*! \brief \copybrief XsDeviceId_isMti6X0(const struct XsDeviceId*) */
+	inline bool isMti6X0() const
+	{
+		return 0 != XsDeviceId_isMti6X0(this);
 	}
 	/*! \brief \copybrief XsDeviceId_isMtw(const struct XsDeviceId*) */
 	inline bool isMtw() const
@@ -621,11 +605,7 @@ struct XsDeviceId {
 
 private:
 #endif
-	// Legacy device identification
-	uint32_t m_deviceId;	//!< The actual device id
-
-	// Future device identification
-	uint64_t m_serialNumber; //!< The serialnumber of a device
+	uint64_t m_deviceId; //!< The serialnumber of a device
 	char m_productCode[24]; //!< The productcode of a device
 	uint16_t m_hardwareVersion; //!< The hardware version of a device
 	uint32_t m_productVariant;	//!< The product variant of a device

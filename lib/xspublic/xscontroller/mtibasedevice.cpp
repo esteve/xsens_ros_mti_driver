@@ -31,21 +31,18 @@
 //  
 
 #include "mtibasedevice.h"
-#include <xstypes/xssensorranges.h>
-#include <xstypes/xsens_generic_matrix.h>
-#include <xscommon/aliascast.h>
-#include <xstypes/xsdatapacket.h>
-#include "replyobject.h"
-#include "communicator.h"
-#include "scenariomatchpred.h"
-#include <xstypes/xssyncsetting.h>
+#include "xsdef.h"
 #include "synclinemk4.h"
-#include "synclinegmt.h"
-#include <xstypes/xsoutputconfigurationlist.h>
-#include <set>
+#include <xstypes/xsoutputconfigurationarray.h>
 #include <xstypes/xssyncsettingarray.h>
 #include <xstypes/xsportinfo.h>
 #include "xsicccommand.h"
+#include <xstypes/xsmatrix.h>
+#include "xsiccrepmotionresult.h"
+#include <xstypes/xsquaternion.h>
+#include <xstypes/xsvector.h>
+#include <set>
+#include <xstypes/xsstatusflag.h>
 
 using namespace xsens;
 
@@ -54,7 +51,6 @@ using namespace xsens;
 */
 MtiBaseDevice::MtiBaseDevice(Communicator* comm)
 	: MtDeviceEx(comm)
-	, m_representativeMotion(false)
 {
 }
 
@@ -63,7 +59,6 @@ MtiBaseDevice::MtiBaseDevice(Communicator* comm)
 */
 MtiBaseDevice::MtiBaseDevice(MtContainer *master)
 	: MtDeviceEx(master, XsDeviceId())
-	, m_representativeMotion(false)
 {
 }
 
@@ -608,3 +603,10 @@ bool MtiBaseDevice::hasIccSupport() const
 	return (firmwareVersion() >= XsVersion(1, 5, 0));
 }
 
+void MtiBaseDevice::fetchAvailableHardwareScenarios()
+{
+	if (deviceId().isImu())						// If we are a 100 type device,
+		m_hardwareFilterProfiles.clear();				// there are no filter profiles in the firmware.
+	else												// For other device types,
+		MtDeviceEx::fetchAvailableHardwareScenarios();	// fetch the scenarios.
+}

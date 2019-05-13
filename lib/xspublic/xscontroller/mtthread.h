@@ -30,8 +30,6 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-// half-public file, c++-source code only
-
 #ifndef MTTHREAD_H
 #define MTTHREAD_H
 

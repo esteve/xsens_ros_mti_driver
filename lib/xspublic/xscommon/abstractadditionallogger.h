@@ -41,6 +41,9 @@
 */
 class AbstractAdditionalLogger {
 public:
+	/*! \brief Destructor */
+	virtual ~AbstractAdditionalLogger() {}
+
 	/*! \returns true if loglevel \a level should be logged, false otherwise
 		\param[in] level The log level to check
 	*/
@@ -64,7 +67,7 @@ public:
 	*/
 	virtual void setDebugLevel(JournalLogLevel level) = 0;
 
-	/*! \brief Perform a logging
+	/*! \brief Write line to the log
 		\param[in] level The log level
 		\param[in] file The name of the file from which the logging originates
 		\param[in] line The line number from which the logging originates
@@ -73,7 +76,7 @@ public:
 	*/
 	virtual void log(JournalLogLevel level, char const * file, int line, char const * function, std::string const & msg) = 0;
 
-	/*! \brief Perform a logging without decoration
+	/*! \brief Write line to the log without decoration (timestamp, thread)
 		\param[in] level The log level
 		\param[in] file The name of the file from which the logging originates
 		\param[in] line The line number from which the logging originates

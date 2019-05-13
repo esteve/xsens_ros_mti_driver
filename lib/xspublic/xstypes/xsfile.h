@@ -81,10 +81,10 @@ XSTYPES_DLL_API XsResultValue XsFile_puts(struct XsFile *thisPtr, const char *st
 
 XSTYPES_DLL_API XsResultValue XsFile_seek(struct XsFile* thisPtr, XsFilePos offset);
 XSTYPES_DLL_API XsResultValue XsFile_seek_r(struct XsFile* thisPtr, XsFilePos offset);
-XSTYPES_DLL_API XsFilePos XsFile_tell(struct XsFile *thisPtr);
+XSTYPES_DLL_API XsFilePos XsFile_tell(struct XsFile const* thisPtr);
 
-XSTYPES_DLL_API int XsFile_eof(struct XsFile *thisPtr);
-XSTYPES_DLL_API XsResultValue XsFile_error(struct XsFile *thisPtr);
+XSTYPES_DLL_API int XsFile_eof(struct XsFile const* thisPtr);
+XSTYPES_DLL_API XsResultValue XsFile_error(struct XsFile const* thisPtr);
 XSTYPES_DLL_API XsResultValue XsFile_fullPath(const struct XsString* filename, struct XsString* fullPath);
 
 XSTYPES_DLL_API XsResultValue XsFile_getline(struct XsFile *thisPtr, struct XsString *line);
@@ -234,19 +234,19 @@ struct XsFile {
 	}
 
 	/*! \brief \copybrief XsFile_tell */
-	inline XsFilePos tell()
+	inline XsFilePos tell() const
 	{
 		return XsFile_tell(this);
 	}
 
 	/*! \brief \copybrief XsFile_eof */
-	inline bool eof()
+	inline bool eof() const
 	{
 		return (0!=XsFile_eof(this));
 	}
 
 	/*! \brief \copybrief XsFile_error */
-	inline XsResultValue error()
+	inline XsResultValue error() const
 	{
 		return XsFile_error(this);
 	}

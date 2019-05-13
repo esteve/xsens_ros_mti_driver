@@ -70,7 +70,7 @@ struct XsMessageArray : public XsArrayImpl<XsMessage, g_xsMessageArrayDescriptor
 	}
 
 	//! \brief Constructs an XsMessageArray that references the data supplied in \a ref
-	inline explicit XsMessageArray(XsMessage* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsMessageArray(XsMessage* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: ArrayImpl(ref, sz, flags)
 	{
 	}

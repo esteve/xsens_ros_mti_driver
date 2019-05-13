@@ -69,7 +69,7 @@ struct XsSyncSettingArray : public XsArrayImpl<XsSyncSetting, g_xsSyncSettingArr
 	}
 
 	//! \brief Constructs an XsSyncSettingArray that references the data supplied in \a ref
-	inline explicit XsSyncSettingArray(XsSyncSetting* ref, XsSize sz, XsDataFlags flags = XSDF_None)
+	inline explicit XsSyncSettingArray(XsSyncSetting* ref, XsSize sz, XsDataFlags flags /* = XSDF_None */)
 		: ArrayImpl(ref, sz, flags)
 	{
 	}

@@ -494,6 +494,19 @@ void CallbackManagerXda::onNonDataMessage(XsDevice* dev, XsMessage const * messa
 }
 
 //! \brief The Xscallback::onMessageReceivedFromDevice() callback forwarding function
+void CallbackManagerXda::onMessageDetected(XsDevice* dev, XsProtocolType type, XsByteArray const * rawMessage)
+{
+	LockReadWrite locky(m_callbackMutex, LS_Read);
+	CallbackHandlerXdaItem* current = m_handlerList;
+	while (current)
+	{
+		if (current->m_handler->m_onMessageDetected)
+			current->m_handler->m_onMessageDetected(current->m_handler, dev, type, rawMessage);
+		current = current->m_next;
+	}
+}
+
+//! \brief The Xscallback::onMessageReceivedFromDevice() callback forwarding function
 void CallbackManagerXda::onMessageReceivedFromDevice(XsDevice* dev, XsMessage const * message)
 {
 	LockReadWrite locky(m_callbackMutex, LS_Read);

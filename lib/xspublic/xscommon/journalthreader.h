@@ -33,31 +33,76 @@
 #ifndef JOURNALTHREADER_H
 #define JOURNALTHREADER_H
 
+#include "xscommon_config.h"
 #include <string>
-#include <map>
 #include "journalloglevel.h"
+#if JOURNALLER_WITH_THREAD_SUPPORT
+#include <map>
+#include "xsens_mutex.h"
+#endif
 
-class JournalFile;
 class FileInfo;
-class ThreadLine;
+class JournalFile;
 
 class JournalThreader {
 public:
 	JournalThreader();
 	~JournalThreader();
 
-	void flushAll();
-	void flushFile(JournalFile* file);
-	void removeFile(JournalFile* file);
-	void flushMessage(JournalFile* file, const std::string& msg);
-	JournalLogLevel setLineLevel(JournalFile* file, int thread, JournalLogLevel level);
-	JournalLogLevel lineLevel(JournalFile* file, int thread);
-	std::string& line(JournalFile* file, int thread);
+	void flushAll(JournalFile* file);
+	void writeLine(int thread, JournalFile* file);
+	JournalLogLevel setLineLevel(int thread, JournalLogLevel level);
+	JournalLogLevel lineLevel(int thread);
+	std::string& line(int thread);
 
 private:
-	typedef std::map<JournalFile*, FileInfo*> FileInfoMap;
-	FileInfoMap m_files;
-	FileInfo* fileInfo(JournalFile* file);
+	/*! \brief Storage for logging queue of a specific thread
+	*/
+	class ThreadLine {
+	public:
+		std::string m_line;			//!< The contained text for this log line
+		JournalLogLevel m_level;	//!< The level of this log line
+
+		/*! \brief Constructor, creates an empty line at WRITE log level */
+		ThreadLine() : m_level(JLL_Write) {}
+	};
+
+#if JOURNALLER_WITH_THREAD_SUPPORT
+	std::map<int, ThreadLine> m_map;		//!< The contained lines, one for each thread
+	mutable xsens::Mutex m_mutex;			//!< A mutex guarding access to the map (not to the lines)
+
+	/*! \brief Get the line object for the supplied thread, typically for the current thread */
+	inline ThreadLine& threadLine(int thread)
+	{
+		xsens::Lock lock(&m_mutex);
+		return m_map[thread];
+	}
+
+	/*! \brief Get the next non-empty line object from the map of all threads, returns an empty line object if no non-empty objects were available */
+	inline ThreadLine& nextLine()
+	{
+		xsens::Lock lock(&m_mutex);
+		for (auto it = m_map.begin(); it != m_map.end(); ++it)
+			if (!it->second.m_line.empty())
+				return it->second;
+		return threadLine(0);
+	}
+
+#else
+
+	ThreadLine m_line;			//!< The contained line, in single-threaded mode only a single line is needed per journaller
+	/*! \brief Get the line object */
+	inline ThreadLine& threadLine(int)
+	{
+		return m_line;
+	}
+
+	/*! \brief Get the line object */
+	inline ThreadLine& nextLine()
+	{
+		return m_line;
+	}
+#endif
 };
 
 #endif
