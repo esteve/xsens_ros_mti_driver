@@ -1,0 +1,34 @@
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - README.md
+
+container:
+  image: osrf/ros:melodic-desktop
+  options: "--name ci-container -v /usr/bin/docker:/tmp/docker:ro"
+
+steps:
+  - script: |
+      /tmp/docker exec -t -u 0 ci-container \
+      sh -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confold" -y install sudo"
+    displayName: Set up sudo
+  - script: sudo apt-get update && sudo apt-get install -y python3-colcon-common-extensions
+    displayName: Install colcon
+  - script: rosdep update && rosdep install -y --from . --ignore-src
+    displayName: Install ROS dependencies
+  - script: |
+      source /opt/ros/melodic/setup.bash
+      colcon build \
+        --merge-install \
+        --cmake-args \
+          -DCMAKE_BUILD_TYPE=Release
+    displayName: Build xsens_ros_mti_driver
+  - script: |
+      source /opt/ros/melodic/setup.bash
+      colcon test \
+        --merge-install
+      colcon test-result --verbose
+    displayName: Test xsens_ros_mti_driver

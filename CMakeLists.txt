@@ -51,13 +51,94 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-link_directories(lib/xspublic/xscontroller lib/xspublic/xscommon lib/xspublic/xstypes)
+add_library(xscontroller
+  lib/xspublic/xscommon/additionalloggerbase.cpp
+  lib/xspublic/xscommon/consolelogger.cpp
+  lib/xspublic/xscommon/enumexpandersbase.cpp
+  lib/xspublic/xscommon/journalexception.cpp
+  lib/xspublic/xscommon/journalfile.cpp
+  lib/xspublic/xscommon/journaller.cpp
+  lib/xspublic/xscommon/journalthreader.cpp
+  lib/xspublic/xscommon/stackdumper.cpp
+  lib/xspublic/xscommon/stackwalker.cpp
+  lib/xspublic/xscommon/stackwalker_linux.cpp
+  lib/xspublic/xscommon/threading.cpp
+  lib/xspublic/xscommon/xprintf.cpp
+  lib/xspublic/xscommon/xsens_threadpool.cpp
+)
+
+add_library(xscommon
+  lib/xspublic/xscontroller/broadcastdevice.cpp
+  lib/xspublic/xscontroller/callbackmanagerxda.cpp
+  lib/xspublic/xscontroller/communicator.cpp
+  lib/xspublic/xscontroller/communicatorfactory.cpp
+  lib/xspublic/xscontroller/datalogger.cpp
+  lib/xspublic/xscontroller/datapacketcache.cpp
+  lib/xspublic/xscontroller/dataparser.cpp
+  lib/xspublic/xscontroller/datapoller.cpp
+  lib/xspublic/xscontroller/devicecommunicator.cpp
+  lib/xspublic/xscontroller/devicefactory.cpp
+  lib/xspublic/xscontroller/deviceredetector.cpp
+  lib/xspublic/xscontroller/enumerateusbdevices.cpp
+  lib/xspublic/xscontroller/enumexpanders.cpp
+  lib/xspublic/xscontroller/iointerface.cpp
+  lib/xspublic/xscontroller/iointerfacefile.cpp
+  lib/xspublic/xscontroller/messageextractor.cpp
+  lib/xspublic/xscontroller/messageserializer.cpp
+  lib/xspublic/xscontroller/mtbdatalogger.cpp
+  lib/xspublic/xscontroller/mtbfilecommunicator.cpp
+  lib/xspublic/xscontroller/mtdevice.cpp
+  lib/xspublic/xscontroller/mti7device.cpp
+  lib/xspublic/xscontroller/mtibasedevice.cpp
+  lib/xspublic/xscontroller/mtigdevice.cpp
+  lib/xspublic/xscontroller/mtix00device.cpp
+  lib/xspublic/xscontroller/mtix0device.cpp
+  lib/xspublic/xscontroller/mtixdevice.cpp
+  lib/xspublic/xscontroller/mtthread.cpp
+  lib/xspublic/xscontroller/nmea_common.cpp
+  lib/xspublic/xscontroller/nmea_parser.cpp
+  lib/xspublic/xscontroller/nmea_parsersubject.cpp
+  lib/xspublic/xscontroller/nmea_protocolhandler.cpp
+  lib/xspublic/xscontroller/packeterrorrateestimator.cpp
+  lib/xspublic/xscontroller/packetstamper.cpp
+  lib/xspublic/xscontroller/protocolhandler.cpp
+  lib/xspublic/xscontroller/protocolmanager.cpp
+  lib/xspublic/xscontroller/proxycommunicator.cpp
+  lib/xspublic/xscontroller/replymonitor.cpp
+  lib/xspublic/xscontroller/replyobject.cpp
+  lib/xspublic/xscontroller/restorecommunication.cpp
+  lib/xspublic/xscontroller/scanner.cpp
+  lib/xspublic/xscontroller/serialcommunicator.cpp
+  lib/xspublic/xscontroller/serialinterface.cpp
+  lib/xspublic/xscontroller/serialportcommunicator.cpp
+  lib/xspublic/xscontroller/supportedsyncsettings.cpp
+  lib/xspublic/xscontroller/udev.cpp
+  lib/xspublic/xscontroller/usbcommunicator.cpp
+  lib/xspublic/xscontroller/usbinterface.cpp
+  lib/xspublic/xscontroller/xdacommunicatorfactory.cpp
+  lib/xspublic/xscontroller/xscontrol_def.cpp
+  lib/xspublic/xscontroller/xsdef.cpp
+  lib/xspublic/xscontroller/xsdevice_def.cpp
+  lib/xspublic/xscontroller/xslibusb.cpp
+  lib/xspublic/xscontroller/xsscanner.cpp
+  lib/xspublic/xscontroller/xswinusb.cpp
+)
+
+add_library(xstypes
+  lib/xspublic/xstypes/datapacket_p.cpp
+  lib/xspublic/xstypes/xsdatapacket.cpp
+  lib/xspublic/xstypes/xsdebugcounters.cpp
+  lib/xspublic/xstypes/xsens_math_throw.cpp
+  lib/xspublic/xstypes/xssensorranges.cpp
+)
+
 add_executable(
 	xsens_mti_node
 	src/main.cpp
 	src/xdainterface.cpp
 	src/xdacallback.cpp
 )
+
 target_link_libraries(
 	xsens_mti_node
 	xscontroller
